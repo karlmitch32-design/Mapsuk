@@ -21,7 +21,7 @@ button.secondary{background:#edf0e7;color:var(--dark)}button.danger{background:#
 .nav{position:absolute;z-index:1100;bottom:8px;left:8px;right:8px;background:#fff;border-radius:14px;padding:5px;display:flex;box-shadow:0 2px 15px #0003}
 .nav button{flex:1;background:#fff;color:var(--dark);font-size:12px}.nav button.active{background:#edf0e7}
 .badge{display:inline-block;background:#edf0e7;color:var(--dark);border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700}
-.notice{background:#f7f8f2;border:1px solid var(--line);padding:9px;border-radius:10px;margin-top:9px;font-size:12px}
+.notice{background:#f7f8f2;border:1px solid var(--line);padding:9px;border-radius:10px;margin-top:9px;font-size:12px}.alert{background:#fff4d6;border:1px solid #e3c56b;padding:10px;border-radius:10px;margin-top:9px;font-size:13px}.dangerAlert{background:#f8e5e1;border-color:#d9aaa0}.turn{font-size:18px;line-height:1.25}
 #scanPreview{max-width:100%;max-height:150px;border-radius:10px;margin-top:9px;display:none}
 @media(min-width:800px){.panel{width:440px;right:auto;bottom:70px}.nav{width:440px;right:auto}}
 </style>
@@ -55,6 +55,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 }).addTo(map);
 
 let pin=null, route=null, current=null, startPoint=null, routeSteps=[], stepIndex=0, voiceOn=true, watchId=null, myMarker=null;
+let routeCoords=[], warnedApproach400=-1, warnedApproach150=-1, warnedTurn=-1, offRouteCount=0, lastGps=null, arrivalDone=false, rerouting=false, selectedVoice=null;
 const P=document.getElementById('panel');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const saved=()=>JSON.parse(localStorage.getItem('mapsuk.saved')||'[]');
@@ -129,46 +130,95 @@ function distanceMetres(lat1,lon1,lat2,lon2){
 function startTracking(){
  stopTracking();
  if(!navigator.geolocation){show('<b>GPS unavailable</b><div class="small">This browser does not provide location tracking.</div>');return;}
- watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:2000,timeout:15000});
- show('<b>🧭 Live navigation active</b><div class="notice">Waiting for GPS movement…</div><div class="small">Keep MAPSUK open and allow location access.</div>');
+ offRouteCount=0; lastGps=null; arrivalDone=false;
+ watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+ show('<b>🧭 Live navigation active</b><div class="notice">Waiting for a GPS fix…</div><div class="small">Keep MAPSUK open and allow location access. Voice guidance is '+(voiceOn?'on':'off')+'.</div>');
+ speak('Starting navigation. Waiting for GPS.');
+}
+function nearestRouteDistance(lat,lon){
+ if(!routeCoords.length)return Infinity;
+ let best=Infinity;
+ for(let i=0;i<routeCoords.length-1;i++){
+   const a=routeCoords[i],b=routeCoords[i+1];
+   const d=pointToSegmentMetres(lat,lon,a[0],a[1],b[0],b[1]);
+   if(d<best)best=d;
+ }
+ return best;
+}
+function pointToSegmentMetres(lat,lon,lat1,lon1,lat2,lon2){
+ const rad=Math.PI/180, kLat=111320, kLon=111320*Math.cos(lat*rad);
+ const ax=lon1*kLon, ay=lat1*kLat, bx=lon2*kLon, by=lat2*kLat, px=lon*kLon, py=lat*kLat;
+ const dx=bx-ax,dy=by-ay, len=dx*dx+dy*dy;
+ if(!len)return Math.hypot(px-ax,py-ay);
+ const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len));
+ return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
 }
 function onPosition(pos){
  const lat=pos.coords.latitude,lon=pos.coords.longitude,accuracy=Math.round(pos.coords.accuracy||0);
+ lastGps={lat,lon,accuracy};
  if(!myMarker) myMarker=L.circleMarker([lat,lon],{radius:7,weight:3}).addTo(map);
  myMarker.setLatLng([lat,lon]).bindPopup('Your current position');
+ if(map.getZoom()<16)map.setZoom(16);
  map.setView([lat,lon],Math.max(map.getZoom(),16),{animate:true});
- if(routeSteps.length){
-   let step=routeSteps[stepIndex];
-   const loc=step?.maneuver?.location;
-   if(loc){
-     const d=distanceMetres(lat,lon,loc[1],loc[0]);
-     if(d<=45 && stepIndex<routeSteps.length-1){
+ if(!routeSteps.length)return;
+ if(accuracy>60){renderLiveNavigation('⚠️ GPS accuracy is '+accuracy+'m — guidance may be less precise.');}
+ const destDist=current?distanceMetres(lat,lon,current.lat,current.lon):Infinity;
+ if(destDist<=40 && !arrivalDone){
+   arrivalDone=true; speak('You have arrived at your destination.'); stopTracking();
+   show('<b>🏁 You have arrived</b><div class="notice"><span class="turn">Destination reached.</span></div><div class="small">GPS distance to destination: '+Math.round(destDist)+' metres.</div><div class="actions"><button onclick="hide()">Close</button></div>');
+   return;
+ }
+ const routeDist=nearestRouteDistance(lat,lon);
+ if(routeDist>75){
+   offRouteCount++;
+   if(offRouteCount>=2 && !rerouting){
+     rerouting=true; speak('You are off route. Recalculating.');
+     show('<b>⚠️ Off route</b><div class="alert dangerAlert">Recalculating a safe route from your current position…</div>');
+     drawRoute({lat,lon},current).then(()=>{rerouting=false;offRouteCount=0;startTracking();}).catch(e=>{rerouting=false;show('<b>Re-route failed</b><div class="small">'+esc(e.message)+'</div><div class="actions"><button onclick="startTracking()">Try again</button></div>')});
+     return;
+   }
+ }else offRouteCount=0;
+ const step=routeSteps[stepIndex];
+ const loc=step?.maneuver?.location;
+ if(loc){
+   const d=distanceMetres(lat,lon,loc[1],loc[0]);
+   if(stepIndex<routeSteps.length-1){
+     if(d<=400 && warnedApproach400!==stepIndex){warnedApproach400=stepIndex;speak('In about 400 metres, '+(step.maneuver.instruction||'follow the route.'));}
+     if(d<=150 && warnedApproach150!==stepIndex){warnedApproach150=stepIndex;speak('In about 150 metres, '+(step.maneuver.instruction||'follow the route.'));}
+     if(d<=45 && warnedTurn!==stepIndex){
+       warnedTurn=stepIndex;
        stepIndex++;
        const next=routeSteps[stepIndex];
-       const instruction=next?.maneuver?.instruction||'Continue on the planned route.';
-       speak(instruction);
+       speak(next?.maneuver?.instruction||'Continue on the planned route.');
      }
    }
-   renderLiveNavigation();
  }
+ renderLiveNavigation(accuracy>60?'⚠️ GPS signal is weak.':'' ,routeDist);
 }
 function onPositionError(err){
- if(err.code===1)show('<b>Location permission needed</b><div class="small">Chrome blocked location access. Open Chrome site/file settings and allow Location, then start navigation again.</div>');
- else if(err.code===2)show('<b>GPS unavailable</b><div class="small">Move somewhere with a clearer GPS signal and keep MAPSUK open.</div>');
+ if(err.code===1)show('<b>⚠️ Location permission needed</b><div class="small">Chrome has blocked location. Open the MAPSUK site permissions and set Location to Allow, then start navigation again.</div>');
+ else if(err.code===2)show('<b>⚠️ GPS unavailable</b><div class="small">No usable position was received. Move somewhere with a clearer view of the sky and keep MAPSUK open.</div>');
+ else if(err.code===3)show('<b>⚠️ GPS timeout</b><div class="small">MAPSUK is still trying to obtain your position. Keep the screen awake and check that Location is enabled.</div>');
 }
-function renderLiveNavigation(){
+function renderLiveNavigation(alertText='',routeDist=0){
  const st=routeSteps[stepIndex];
- if(!st){return;}
+ if(!st)return;
  const instruction=st?.maneuver?.instruction||'Continue on the planned route.';
- show(`<b>🧭 Live navigation</b><div class="badge">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</div><div class="notice"><b>${esc(instruction)}</b><br><span class="small">${esc(formatDistance(st.distance||0))}</span></div><div class="small">Instruction ${stepIndex+1} of ${routeSteps.length}</div><div class="actions"><button onclick="toggleVoice()">${voiceOn?'Mute voice':'Voice on'}</button><button class="secondary" onclick="stopTracking();hide()">Stop navigation</button></div>`);
+ const manoeuvreDistance=lastGps&&st?.maneuver?.location?distanceMetres(lastGps.lat,lastGps.lon,st.maneuver.location[1],st.maneuver.location[0]):(st.distance||0);
+ const gpsText=lastGps?'GPS ±'+lastGps.accuracy+'m':'Waiting for GPS';
+ const alert=alertText?'<div class="alert">'+esc(alertText)+'</div>':'';
+ show(`<b>🧭 Live navigation</b> <span class="badge">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</span>
+ ${alert}<div class="notice"><div class="turn">${esc(instruction)}</div><br><b>${esc(formatDistance(manoeuvreDistance))}</b></div>
+ <div class="small">Instruction ${stepIndex+1} of ${routeSteps.length} · ${esc(gpsText)}${routeDist?` · ${Math.round(routeDist)}m from route`:''}</div>
+ <div class="actions"><button onclick="toggleVoice()">${voiceOn?'Mute voice':'Voice on'}</button><button class="secondary" onclick="stopTracking();hide()">Stop navigation</button></div>`);
 }
 function useLocation(){
  if(!navigator.geolocation){manualStart();return}
- show('<b>Finding your location…</b>');
+ show('<b>Finding your location…</b><div class="notice">Allow Chrome to use your location when prompted.</div>');
  navigator.geolocation.getCurrentPosition(async pos=>{
   try{await drawRoute({lat:pos.coords.latitude,lon:pos.coords.longitude},current);startTracking();}
   catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}
- },()=>manualStart(),{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+ },err=>onPositionError(err),{enableHighAccuracy:true,timeout:20000,maximumAge:0});
 }
 async function drawRoute(a,dest){
  const u=`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson&steps=true&annotations=false`;
@@ -176,13 +226,15 @@ async function drawRoute(a,dest){
  const j=await r.json();
  if(j.code!=='Ok')throw Error('No driving route found');
  const rt=j.routes[0]; routeSteps=(rt.legs?.[0]?.steps||[]); stepIndex=0;
+ warnedApproach400=-1;warnedApproach150=-1;warnedTurn=-1;offRouteCount=0;arrivalDone=false;
+ routeCoords=(rt.geometry?.coordinates||[]).map(x=>[x[1],x[0]]);
  if(route)map.removeLayer(route);
  route=L.geoJSON(rt.geometry,{style:{weight:6}}).addTo(map);
  map.fitBounds(route.getBounds(),{padding:[30,30]});
  if(myMarker)map.removeLayer(myMarker);
  myMarker=L.circleMarker([a.lat,a.lon],{radius:7,weight:3}).addTo(map).bindPopup('Your current position');
  renderNavigation(rt,dest);
- speak('Route planned. '+Math.round(rt.duration/60)+' minutes. '+(routeSteps[0]?.maneuver?.instruction||''));
+ speak('Route planned. '+formatDistance(rt.distance)+'. About '+Math.round(rt.duration/60)+' minutes. '+(routeSteps[0]?.maneuver?.instruction||'Follow the route.'));
 }
 
 function speak(text){
