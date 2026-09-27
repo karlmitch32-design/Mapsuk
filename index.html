@@ -1,417 +1,98 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MAPSUK — Find it. Route it. Save it.</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<title>MAPSUK V2 — Sat-nav</title>
+<link href="https://unpkg.com/maplibre-gl@5.11.0/dist/maplibre-gl.css" rel="stylesheet">
 <style>
-:root{--olive:#657449;--dark:#465033;--bg:#f4f4ed;--card:#fff;--muted:#687064;--line:#dfe2d8}
-*{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
-body{background:var(--bg);color:#20251d}button,input{font:inherit}
-header{background:var(--dark);color:#fff;padding:12px;position:relative;z-index:1100}
-.brand{font-weight:850;font-size:22px;letter-spacing:.3px}.tag{font-size:12px;opacity:.82}
-.search{display:flex;gap:7px;margin-top:9px}.search input{flex:1;padding:11px;border-radius:10px;border:0;min-width:0}
-button{border:0;border-radius:10px;padding:10px 13px;font-weight:700;background:var(--olive);color:#fff;cursor:pointer}
-button.secondary{background:#edf0e7;color:var(--dark)}button.danger{background:#eee5e2;color:#6a3e35}
-#map{height:calc(100% - 116px);min-height:350px}
-.panel{position:absolute;z-index:1000;left:10px;right:10px;bottom:66px;background:var(--card);border-radius:15px;padding:13px;box-shadow:0 5px 24px #0003;max-height:48%;overflow:auto;display:none}
-.panel.show{display:block}.item{padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}.small{font-size:12px;color:var(--muted);line-height:1.4}
-.actions{display:flex;gap:7px;margin-top:9px}.actions button{flex:1}.row{display:flex;gap:7px;align-items:center}.row>*{flex:1}
-.nav{position:absolute;z-index:1100;bottom:8px;left:8px;right:8px;background:#fff;border-radius:14px;padding:5px;display:flex;box-shadow:0 2px 15px #0003}
-.nav button{flex:1;background:#fff;color:var(--dark);font-size:12px}.nav button.active{background:#edf0e7}
-.badge{display:inline-block;background:#edf0e7;color:var(--dark);border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700}
-.notice{background:#f7f8f2;border:1px solid var(--line);padding:9px;border-radius:10px;margin-top:9px;font-size:12px}
-#scanPreview{max-width:100%;max-height:150px;border-radius:10px;margin-top:9px;display:none}
-.satbar{position:absolute;z-index:1050;top:58px;left:10px;right:10px;pointer-events:none;display:flex;justify-content:center}
-.satcard{background:#fff;border-radius:14px;padding:9px 12px;box-shadow:0 3px 16px #0003;display:none;min-width:230px;max-width:92%;text-align:center}
-.satcard.show{display:block}.satmain{font-size:18px;font-weight:850;color:var(--dark)}
-.satmeta{font-size:11px;color:var(--muted);margin-top:3px}
-.alert{margin-top:6px;padding:7px 9px;border-radius:9px;background:#f7f8f2;border:1px solid var(--line);font-size:12px;font-weight:750}
-.alert.camera{background:#f4ece7}.alert.light{background:#eef1e7}
-.roadbadge{display:inline-block;margin-left:5px;padding:3px 7px;border-radius:999px;background:var(--dark);color:#fff;font-size:11px}
-.car-marker{background:transparent;border:0;font-size:24px;line-height:28px;text-align:center;text-shadow:0 1px 3px #fff}
-@media(min-width:800px){.panel{width:440px;right:auto;bottom:70px}.nav{width:440px;right:auto}}
+:root{--olive:#657449;--dark:#384329;--cream:#f4f4ed;--white:#fff;--muted:#687064;--danger:#8a3d32;--shadow:0 5px 24px #0004}
+*{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#111;color:#20251d}button,input{font:inherit}
+#map{position:absolute;inset:0;background:#d9ddd3}
+.topbar{position:absolute;z-index:20;top:0;left:0;right:0;padding:10px;pointer-events:none}.brandrow{display:flex;align-items:center;gap:8px}.brand{background:var(--dark);color:#fff;border-radius:12px;padding:8px 12px;font-weight:900;letter-spacing:.5px;box-shadow:var(--shadow)}
+.search{margin-top:8px;display:flex;gap:6px;pointer-events:auto}.search input{flex:1;min-width:0;border:0;border-radius:11px;padding:11px 12px;box-shadow:var(--shadow)}.search button{border:0;border-radius:11px;padding:10px 14px;background:var(--olive);color:#fff;font-weight:800}
+.hud{position:absolute;z-index:15;top:82px;left:10px;right:10px;pointer-events:none;display:flex;justify-content:center}.turncard{min-width:260px;max-width:92%;background:#fff;border-radius:16px;padding:9px 14px;box-shadow:var(--shadow);text-align:center}.turnicon{font-size:28px;font-weight:900}.turnmain{font-size:19px;font-weight:900}.turnsub{font-size:12px;color:var(--muted);margin-top:2px}
+.bottom{position:absolute;z-index:15;left:10px;right:10px;bottom:12px;display:flex;gap:8px;align-items:end;pointer-events:none}.speed{background:#fff;border-radius:16px;padding:9px 12px;box-shadow:var(--shadow);min-width:92px;text-align:center}.speed b{font-size:25px;display:block}.speed small{color:var(--muted)}.road{flex:1;background:#fff;border-radius:16px;padding:10px 12px;box-shadow:var(--shadow);min-width:0}.road b{font-size:14px}.road small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.controls{display:flex;gap:6px;pointer-events:auto}.controls button{width:44px;height:44px;border:0;border-radius:50%;background:#fff;box-shadow:var(--shadow);font-size:18px}
+.panel{position:absolute;z-index:30;left:10px;right:10px;bottom:76px;background:#fff;border-radius:16px;padding:13px;box-shadow:var(--shadow);max-height:52%;overflow:auto;display:none}.panel.show{display:block}.small{font-size:12px;color:var(--muted);line-height:1.4}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.actions button{border:0;border-radius:10px;padding:10px 12px;background:var(--olive);color:#fff;font-weight:800}.actions .secondary{background:#edf0e7;color:var(--dark)}.result{padding:10px 0;border-bottom:1px solid #e4e7de}.notice{margin-top:8px;padding:9px;border-radius:10px;background:#f4f6ee}.alert{margin-top:6px;padding:7px 9px;border-radius:9px;background:#f7f8f2;font-weight:750}.camera{background:#f5ebe7}.light{background:#edf2e7}
+.car{width:30px;height:30px;display:grid;place-items:center;transform-origin:50% 50%;filter:drop-shadow(0 2px 2px #0005)}.car svg{width:30px;height:30px}
+.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left{z-index:4}.maplibregl-ctrl-group{box-shadow:var(--shadow)!important}
+@media(min-width:800px){.search{max-width:520px}.panel{max-width:460px;right:auto}.hud{left:300px;right:300px}.bottom{left:18px;right:18px}}
 </style>
 </head>
 <body>
 <div id="app">
-<header>
-  <div class="brand">MAPSUK</div>
-  <div class="tag">Find it. Route it. Save it.</div>
-  <div class="search">
-    <input id="q" placeholder="Search UK address, postcode, town or place" autocomplete="off">
-    <button onclick="find()">Find</button>
-  </div>
-</header>
 <div id="map"></div>
-<div class="satbar"><div id="satcard" class="satcard" aria-live="polite"></div></div>
+<div class="topbar"><div class="brandrow"><div class="brand">MAPSUK • SAT-NAV V2</div></div><div class="search"><input id="q" placeholder="Search UK address, postcode, town or place" autocomplete="off"><button id="findBtn">Find</button></div></div>
+<div class="hud"><div id="turncard" class="turncard"><div class="turnicon">➤</div><div id="turnmain" class="turnmain">Find a destination</div><div id="turnsub" class="turnsub">MAPSUK V2 driving view</div></div></div>
+<div class="bottom"><div class="speed"><b id="speedLimit">—</b><small id="speedSource">Speed limit</small></div><div class="road"><b id="roadName">Ready</b><small id="roadMeta">GPS off • Search a destination to begin</small><div id="alerts"></div></div><div class="controls"><button id="locBtn" title="Use my location">◎</button><button id="voiceBtn" title="Voice guidance">🔊</button></div></div>
 <div id="panel" class="panel"></div>
-<div class="nav">
-  <button class="active" onclick="tab('find',this)">📍 Find</button>
-  <button onclick="tab('route',this)">🚗 Route</button>
-  <button onclick="tab('saved',this)">🏷️ Saved</button>
-  <button onclick="tab('scan',this)">📷 Scan</button>
 </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.11.0/dist/maplibre-gl.js"></script>
 <script>
-const map=L.map('map').setView([54.5,-3.4],6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
- maxZoom:19,attribution:'© OpenStreetMap contributors'
-}).addTo(map);
-
-let pin=null, route=null, current=null, startPoint=null, routeSteps=[], stepIndex=0, voiceOn=true, watchId=null, myMarker=null;
-let routeCoords=[], roadInfo=null, nearbyFeatures=[], lastFeatureFetch=0, lastAnnouncedCamera=null, lastAnnouncedLight=null, lastSpeedAnnounced=null, lastLat=null, lastLon=null, lastHeading=null;
-const P=document.getElementById('panel');
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const saved=()=>JSON.parse(localStorage.getItem('mapsuk.saved')||'[]');
-const save=a=>localStorage.setItem('mapsuk.saved',JSON.stringify(a));
-function show(x){P.innerHTML=x;P.classList.add('show')}
-function hide(){P.classList.remove('show')}
-function activate(b){document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active')}
-
-async function geo(q){
- const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=6&q='+encodeURIComponent(q));
- if(!r.ok)throw Error('Search service unavailable');
- return r.json();
+const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let map,markerEl,marker,current=null,route=null,routeCoords=[],steps=[],stepIndex=0,watchId=null,voiceOn=true,lastPos=null,lastHeading=0,roadInfo=null,nearby=[],lastFeatureFetch=0,lastOffRoute=0,rerouting=false;
+function init(){
+ map=new maplibregl.Map({container:'map',style:{version:8,sources:{osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap contributors'}},layers:[{id:'osm',type:'raster',source:'osm'}]},center:[-3.4,54.5],zoom:6,pitch:0,bearing:0,attributionControl:true});
+ map.addControl(new maplibregl.NavigationControl({showCompass:true}), 'top-right');
+ markerEl=document.createElement('div'); markerEl.className='car'; markerEl.innerHTML='<svg viewBox="0 0 40 40" aria-label="vehicle direction"><path d="M20 2 L34 34 L20 29 L6 34 Z" fill="#657449" stroke="#fff" stroke-width="3"/><circle cx="20" cy="20" r="3" fill="#fff"/></svg>';
+ marker=new maplibregl.Marker({element:markerEl,anchor:'center'}).setLngLat([-3.4,54.5]).addTo(map); marker.remove();
+ $('findBtn').onclick=find; $('q').addEventListener('keydown',e=>{if(e.key==='Enter')find()}); $('locBtn').onclick=useLocation; $('voiceBtn').onclick=toggleVoice;
 }
-
-async function reverse(lat,lon){
- const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
- if(!r.ok)throw Error('Location lookup unavailable');
- return r.json();
+function show(html){$('panel').innerHTML=html;$('panel').classList.add('show')} function hide(){ $('panel').classList.remove('show') }
+function speak(t){if(!voiceOn||!('speechSynthesis'in window)||!t)return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.95;speechSynthesis.speak(u)}
+function fmtDist(m){return m>=1609.344?(m/1609.344).toFixed(1)+' miles':Math.max(1,Math.round(m*1.09361))+' yards'}
+function hav(a,b,c,d){const R=6371000,p=Math.PI/180,x=(b-a)*p,y=(d-c)*p;const z=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(z))}
+function bearing(a,b,c,d){const p=Math.PI/180,y=Math.sin((d-b)*p)*Math.cos(c*p),x=Math.cos(a*p)*Math.sin(c*p)-Math.sin(a*p)*Math.cos(c*p)*Math.cos((d-b)*p);return (Math.atan2(y,x)*180/Math.PI+360)%360}
+function nearestRouteDistance(lat,lon){let best=Infinity;for(const p of routeCoords)best=Math.min(best,hav(lat,lon,p[1],p[0]));return best}
+async function search(q){const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=6&q='+encodeURIComponent(q));if(!r.ok)throw Error('Search unavailable');return r.json()}
+async function find(){const q=$('q').value.trim();if(!q)return;show('<b>Searching…</b>');try{const a=await search(q);if(!a.length){show('<b>No UK result found</b>');return}show('<b>Choose destination</b>'+a.map(x=>`<div class="result"><b>${esc(x.display_name.split(',')[0])}</b><div class="small">${esc(x.display_name)}</div><div class="actions"><button onclick='choose(${JSON.stringify({lat:+x.lat,lon:+x.lon,name:x.display_name})})'>Route here</button></div></div>`).join(''))}catch(e){show('<b>Search error</b><div class="small">'+esc(e.message)+'</div>')}}
+function choose(x){current=x;hide(); if(lastPos)routeTo(lastPos,x);else {map.flyTo({center:[x.lon,x.lat],zoom:15,pitch:45,duration:900});show('<b>Destination selected</b><div class="small">Allow location access, then press ◎ to start live navigation.</div><div class="actions"><button onclick="useLocation()">Use my location</button></div>')}}
+async function routeTo(a,dest=current){if(!dest)return;try{show('<b>Planning driving route…</b>');const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson&steps=true&annotations=false`);if(!r.ok)throw Error('Routing unavailable');const j=await r.json();if(j.code!=='Ok')throw Error('No driving route found');const rt=j.routes[0];steps=rt.legs?.[0]?.steps||[];stepIndex=0;routeCoords=rt.geometry.coordinates||[];if(route)map.getSource('route')?map.removeLayer('route'):null; if(map.getSource('route'))map.removeSource('route');map.addSource('route',{type:'geojson',data:{type:'Feature',geometry:rt.geometry}});map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#657449','line-width':7,'line-opacity':.9}});route=true;map.fitBounds([[...rt.geometry.coordinates.reduce((a,p)=>[Math.min(a[0],p[0]),Math.min(a[1],p[1])],[Infinity,Infinity])],[...rt.geometry.coordinates.reduce((a,p)=>[Math.max(a[0],p[0]),Math.max(a[1],p[1])],[-Infinity,-Infinity])]],{padding:{top:130,bottom:150,left:35,right:35},duration:800});updateTurn();speak('Route planned. '+Math.round(rt.duration/60)+' minutes. '+(steps[0]?.maneuver?.instruction||''));show('<b>🧭 Route ready</b><div class="notice"><b>'+esc(steps[0]?.maneuver?.instruction||'Continue')+'</b><br><span class="small">'+fmtDist(steps[0]?.distance||0)+'</span></div><div class="small">'+(rt.distance/1609.344).toFixed(1)+' miles • about '+Math.round(rt.duration/60)+' minutes</div><div class="actions"><button onclick="startTracking()">▶ Start navigation</button><button class="secondary" onclick="hide()">Close</button></div>')}catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}}
+function updateTurn(){const st=steps[stepIndex];if(!st){$('turnmain').textContent='Arrived';$('turnsub').textContent='Destination reached';return} $('turnmain').textContent=st.maneuver?.instruction||'Continue';$('turnsub').textContent=fmtDist(st.distance||0)+' • instruction '+(stepIndex+1)+' of '+steps.length; $('turncard').querySelector('.turnicon').textContent=iconFor(st.maneuver?.type,st.maneuver?.modifier)}
+function iconFor(t,m){if(t==='roundabout'||t==='rotary')return '⟳'; if(t==='arrive')return '●'; if(m==='left'||m==='slight left')return '↖'; if(m==='right'||m==='slight right')return '↗'; if(m==='uturn')return '↶'; return '↑'}
+async function locationStatus(){
+  let perm='unknown';
+  try{if(navigator.permissions?.query){const q=await navigator.permissions.query({name:'geolocation'});perm=q.state}}catch(e){}
+  return {perm,secure:window.isSecureContext,geo:!!navigator.geolocation};
 }
-
-async function find(){
- const q=document.getElementById('q').value.trim(); if(!q)return;
- show('<b>Searching…</b>');
- try{
-  const d=await geo(q);
-  if(!d.length){show('<b>No UK result found</b><div class="small">Try a full address or postcode.</div>');return}
-  show(d.map(x=>`<div class="item" onclick='selectPlace(${JSON.stringify(x).replaceAll("'","&#39;")})'>
-   <b>${esc(x.display_name.split(',')[0])}</b><div class="small">${esc(x.display_name)}</div></div>`).join(''));
- }catch(e){show('<b>Error</b><div class="small">'+esc(e.message)+'</div>')}
+function gpsErrorText(e){
+  const code=e?.code;
+  if(code===1)return 'Chrome reported PERMISSION_DENIED. If Location already says Allow, reload the GitHub Pages site and try again. Check Android system Location is also switched on.';
+  if(code===2)return 'Chrome could not get a GPS position. Move outside/near a window and try again.';
+  if(code===3)return 'GPS request timed out. Try again with Location switched on.';
+  return 'Unknown GPS error: '+(e?.message||'no message');
 }
-
-function selectPlace(x){
- const p={lat:+x.lat,lon:+x.lon,name:x.display_name};
- current=p; map.setView([p.lat,p.lon],17);
- if(pin)map.removeLayer(pin);
- pin=L.marker([p.lat,p.lon]).addTo(map).bindPopup(esc(p.name)).openPopup();
- show(`<b>${esc(p.name.split(',')[0])}</b><div class="small">${esc(p.name)}</div>
- <div class="actions"><button onclick='savePlace(${JSON.stringify(p)})'>Save place</button><button onclick='routeTo(${JSON.stringify(p)})'>Route here</button></div>`);
+async function useLocation(){
+  if(!navigator.geolocation){show('<b>GPS unavailable</b><div class="small">This browser does not expose geolocation.</div>');return}
+  const st=await locationStatus();
+  show('<b>📍 Checking GPS…</b><div class="small">Permission: '+esc(st.perm)+' • HTTPS: '+(st.secure?'yes':'no')+' • Geolocation API: '+(st.geo?'yes':'no')+'</div>');
+  navigator.geolocation.getCurrentPosition(async p=>{
+    lastPos={lat:p.coords.latitude,lon:p.coords.longitude};
+    placeMarker(lastPos.lat,lastPos.lon);
+    map.flyTo({center:[lastPos.lon,lastPos.lat],zoom:17,pitch:55,bearing:lastHeading,duration:800});
+    $('roadMeta').textContent='GPS lock • ±'+Math.round(p.coords.accuracy||0)+' m';
+    if(current)await routeTo(lastPos,current);
+    startTracking();
+  },async e=>{
+    const again=await locationStatus();
+    show('<b>📍 GPS could not start</b><div class="notice"><b>'+esc(gpsErrorText(e))+'</b></div><div class="small">Error code: '+esc(e?.code)+' • Permission: '+esc(again.perm)+' • HTTPS: '+(again.secure?'yes':'no')+'</div><div class="actions"><button onclick="useLocation()">Try GPS again</button><button class="secondary" onclick="showGpsHelp()">GPS help</button></div>');
+    $('roadMeta').textContent='GPS error '+(e?.code||'?')+' • '+(e?.message||'unknown');
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
 }
-
-function savePlace(p){
- let a=saved();
- if(!a.some(x=>Math.abs(x.lat-p.lat)<1e-5&&Math.abs(x.lon-p.lon)<1e-5))a.push({...p,id:Date.now()});
- save(a); show('<b>Place saved ✓</b><div class="small">Stored locally in this browser.</div>');
-}
-
-function deletePlace(id){save(saved().filter(x=>x.id!==id));tab('saved',document.querySelector('.nav button:nth-child(3)'));}
-
-function routeTo(dest){
- current=dest; activate(document.querySelector('.nav button:nth-child(2)'));
- show(`<b>🚗 Route to ${esc(dest.name.split(',')[0])}</b>
- <div class="small">Choose a starting point.</div>
- <div class="actions"><button onclick="useLocation()">Use my location</button><button class="secondary" onclick="manualStart()">Enter start</button></div><div class="notice">Voice guidance uses your browser's built-in UK speech voice when available.</div>`);
-}
-
-function manualStart(){
- show(`<b>🚗 Starting point</b><div class="search"><input id="start" placeholder="Start address or postcode"><button onclick="calcManual()">Go</button></div>`);
-}
-async function calcManual(){
- const q=document.getElementById('start').value.trim();if(!q)return;
- try{show('<b>Finding starting point…</b>');const d=await geo(q);if(!d.length)throw Error('Starting location not found');await drawRoute({lat:+d[0].lat,lon:+d[0].lon},current);startTracking()}
- catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}
-}
-function stopTracking(){
- if(watchId!==null && navigator.geolocation){navigator.geolocation.clearWatch(watchId);watchId=null;}
-}
-
-function distanceMetres(lat1,lon1,lat2,lon2){
- const R=6371000,rad=Math.PI/180,dLat=(lat2-lat1)*rad,dLon=(lon2-lon1)*rad;
- const a=Math.sin(dLat/2)**2+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
- return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-function bearingDegrees(lat1,lon1,lat2,lon2){
- const r=Math.PI/180, y=Math.sin((lon2-lon1)*r)*Math.cos(lat2*r);
- const x=Math.cos(lat1*r)*Math.sin(lat2*r)-Math.sin(lat1*r)*Math.cos(lat2*r)*Math.cos((lon2-lon1)*r);
- return (Math.atan2(y,x)*180/Math.PI+360)%360;
-}
-
-function bearingName(b){
- const dirs=['N','NE','E','SE','S','SW','W','NW']; return dirs[Math.round(b/45)%8];
-}
-
-function parseSpeed(value){
- if(value===undefined||value===null||value==='')return null;
- const s=String(value).trim().toLowerCase();
- const n=parseFloat(s); if(!Number.isFinite(n))return null;
- if(s.includes('mph'))return Math.round(n);
- if(s.includes('km'))return Math.round(n/1.609344);
- if(/^\d+(\.\d+)?$/.test(s))return Math.round(n/1.609344); // OSM numeric maxspeed is km/h
- return null;
-}
-
-function implicitUKSpeed(tags){
- const raw=String(tags?.maxspeed||'').trim().toLowerCase();
- if(raw==='gb:nsl_dual' || raw==='national_speed_limit' || raw==='national speed limit dual')return 70;
- if(raw==='gb:nsl_single' || raw==='national speed limit single')return 60;
- if(tags?.maxspeed)return parseSpeed(tags.maxspeed);
- if(tags?.['maxspeed:type']==='GB:nsl_dual')return 70;
- if(tags?.['maxspeed:type']==='GB:nsl_single')return 60;
- return null;
-}
-
-function routePointDistance(lat,lon){
- if(!routeCoords.length)return Infinity;
- let best=Infinity;
- for(let i=0;i<routeCoords.length;i++){
-   const p=routeCoords[i];
-   const d=distanceMetres(lat,lon,p[1],p[0]);
-   if(d<best)best=d;
- }
- return best;
-}
-
-function showSatCard(html){
- const el=document.getElementById('satcard'); if(!el)return;
- el.innerHTML=html; el.classList.add('show');
-}
-function hideSatCard(){document.getElementById('satcard')?.classList.remove('show');}
-
-function startTracking(){
- stopTracking();
- if(!navigator.geolocation){show('<b>GPS unavailable</b><div class="small">This browser does not provide location tracking.</div>');return;}
- watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:1500,timeout:15000});
- showSatCard('<div class="satmain">🧭 GPS navigation active</div><div class="satmeta">Waiting for a precise position…</div>');
- show('<b>🧭 Live navigation active</b><div class="notice">MAPSUK is tracking your position, road speed and mapped road features.</div><div class="small">Keep MAPSUK open and allow location access.</div>');
-}
-
-async function fetchRoadFeatures(lat,lon){
- const now=Date.now();
- if(now-lastFeatureFetch<8000)return;
- lastFeatureFetch=now;
- const bbox=`${lat-0.006},${lon-0.009},${lat+0.006},${lon+0.009}`;
- const q=`[out:json][timeout:15];(
-   way[highway][maxspeed](${bbox});
-   way[highway][maxspeed:type](${bbox});
-   node[highway=traffic_signals](${bbox});
-   node[highway=speed_camera](${bbox});
-   way[highway=speed_camera](${bbox});
-   relation[enforcement=maxspeed](${bbox});
-   relation[enforcement=average_speed](${bbox});
- );out body geom;`;
- try{
-   const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});
-   if(!r.ok)throw Error('Overpass unavailable');
-   const j=await r.json();
-   const elements=j.elements||[];
-   roadInfo=null; nearbyFeatures=[];
-   for(const e of elements){
-     if(e.type==='way' && e.geometry){
-       const pts=e.geometry.map(p=>[p.lat,p.lon]);
-       const d=Math.min(...pts.map(p=>distanceMetres(lat,lon,p[0],p[1])));
-       if(d<180){
-         const speed=implicitUKSpeed(e.tags||{});
-         if(speed!==null && (!roadInfo||d<roadInfo.distance)) roadInfo={speed,distance:d,name:e.tags?.name||'',highway:e.tags?.highway||''};
-       }
-     }else if(e.type==='node' && e.lat!==undefined){
-       const d=distanceMetres(lat,lon,e.lat,e.lon);
-       if(d<650) nearbyFeatures.push({type:e.tags?.highway==='speed_camera'?'camera':'light',lat:e.lat,lon:e.lon,distance:d,tags:e.tags||{}});
-     }
-   }
-   updateSatDisplay(lat,lon);
- }catch(e){
-   // Keep navigation working if the feature-data service is temporarily unavailable.
- }
-}
-
-function updateSatDisplay(lat,lon){
- const speed=roadInfo?.speed;
- const lights=nearbyFeatures.filter(x=>x.type==='light' && routePointDistance(x.lat,x.lon)<70).sort((a,b)=>a.distance-b.distance);
- const cams=nearbyFeatures.filter(x=>x.type==='camera' && routePointDistance(x.lat,x.lon)<70).sort((a,b)=>a.distance-b.distance);
- const light=lights[0], cam=cams[0];
- const speedText=speed?`${speed} mph`:'Speed limit unknown';
- let html=`<div class="satmain">${esc(speedText)}${roadInfo?.name?` <span class="roadbadge">${esc(roadInfo.name)}</span>`:''}</div>`;
- if(cam)html+=`<div class="alert camera">📷 Speed camera · ${formatDistance(cam.distance)}</div>`;
- if(light)html+=`<div class="alert light">🚦 Traffic lights · ${formatDistance(light.distance)}</div>`;
- if(!cam&&!light)html+=`<div class="satmeta">Road intelligence updating from mapped UK road data</div>`;
- showSatCard(html);
-}
-
-function announceFeature(lat,lon){
- const cams=nearbyFeatures.filter(x=>x.type==='camera'&&routePointDistance(x.lat,x.lon)<70).sort((a,b)=>a.distance-b.distance);
- const lights=nearbyFeatures.filter(x=>x.type==='light'&&routePointDistance(x.lat,x.lon)<70).sort((a,b)=>a.distance-b.distance);
- const cam=cams[0], light=lights[0];
- if(cam && cam.distance<=350){
-   const id=`${cam.lat.toFixed(5)},${cam.lon.toFixed(5)}`;
-   if(id!==lastAnnouncedCamera){ speak(`Speed camera ahead in ${formatDistance(cam.distance)}.`); lastAnnouncedCamera=id; }
- }
- if(light && light.distance<=250){
-   const id=`${light.lat.toFixed(5)},${light.lon.toFixed(5)}`;
-   if(id!==lastAnnouncedLight){ speak(`Traffic lights ahead in ${formatDistance(light.distance)}.`); lastAnnouncedLight=id; }
- }
- if(roadInfo?.speed && roadInfo.speed!==lastSpeedAnnounced){
-   speak(`Speed limit ${roadInfo.speed} miles per hour.`);
-   lastSpeedAnnounced=roadInfo.speed;
- }
-}
-
-function onPosition(pos){
- const lat=pos.coords.latitude,lon=pos.coords.longitude,accuracy=Math.round(pos.coords.accuracy||0);
- if(lastLat!==null && distanceMetres(lastLat,lastLon,lat,lon)>3){
-   lastHeading=bearingDegrees(lastLat,lastLon,lat,lon);
- }
- lastLat=lat; lastLon=lon;
- if(!myMarker) myMarker=L.marker([lat,lon],{icon:L.divIcon({className:'car-marker',html:'🚗',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(map);
- myMarker.setLatLng([lat,lon]).bindPopup(`Your current position<br>GPS ±${accuracy} m`);
- map.setView([lat,lon],Math.max(map.getZoom(),17),{animate:true});
- fetchRoadFeatures(lat,lon);
- if(routeSteps.length){
-   const step=routeSteps[stepIndex],loc=step?.maneuver?.location;
-   if(loc){
-     const d=distanceMetres(lat,lon,loc[1],loc[0]);
-     if(d<=45 && stepIndex<routeSteps.length-1){
-       stepIndex++;
-       const next=routeSteps[stepIndex];
-       speak(next?.maneuver?.instruction||'Continue on the planned route.');
-     }
-   }
-   announceFeature(lat,lon);
-   renderLiveNavigation();
- }
-}
-
-function onPositionError(err){
- if(err.code===1)show('<b>Location permission needed</b><div class="small">Chrome blocked location access. Open Chrome site/file settings and allow Location, then start navigation again.</div>');
- else if(err.code===2)show('<b>GPS unavailable</b><div class="small">Move somewhere with a clearer GPS signal and keep MAPSUK open.</div>');
-}
-function renderLiveNavigation(){
- const st=routeSteps[stepIndex];
- if(!st){return;}
- const instruction=st?.maneuver?.instruction||'Continue on the planned route.';
- const speed=roadInfo?.speed?`${roadInfo.speed} mph`:'Speed limit unknown';
- const cam=nearbyFeatures.filter(x=>x.type==='camera'&&routePointDistance(x.lat,x.lon)<70).sort((a,b)=>a.distance-b.distance)[0];
- const light=nearbyFeatures.filter(x=>x.type==='light'&&routePointDistance(x.lat,x.lon)<70).sort((a,b)=>a.distance-b.distance)[0];
- show(`<b>🧭 Live navigation</b><div class="badge">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</div>
- <div class="notice"><b>${esc(instruction)}</b><br><span class="small">${esc(formatDistance(st.distance||0))}</span></div>
- <div class="notice"><b>Speed limit: ${esc(speed)}</b>${roadInfo?.name?` · ${esc(roadInfo.name)}`:''}${cam?`<br>📷 Camera ${esc(formatDistance(cam.distance))}`:''}${light?`<br>🚦 Traffic lights ${esc(formatDistance(light.distance))}`:''}</div>
- <div class="small">Instruction ${stepIndex+1} of ${routeSteps.length}</div>
- <div class="actions"><button onclick="toggleVoice()">${voiceOn?'Mute voice':'Voice on'}</button><button class="secondary" onclick="stopTracking();hide();hideSatCard()">Stop navigation</button></div>`);
-}
-function useLocation(){
- if(!navigator.geolocation){manualStart();return}
- show('<b>Finding your location…</b>');
- navigator.geolocation.getCurrentPosition(async pos=>{
-  try{await drawRoute({lat:pos.coords.latitude,lon:pos.coords.longitude},current);startTracking();}
-  catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}
- },()=>manualStart(),{enableHighAccuracy:true,timeout:15000,maximumAge:0});
-}
-async function drawRoute(a,dest){
- const u=`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson&steps=true&annotations=false`;
- const r=await fetch(u); if(!r.ok)throw Error('Routing service unavailable');
- const j=await r.json();
- if(j.code!=='Ok')throw Error('No driving route found');
- const rt=j.routes[0]; routeSteps=(rt.legs?.[0]?.steps||[]); stepIndex=0;
- if(route)map.removeLayer(route);
- routeCoords=rt.geometry?.coordinates||[];
- route=L.geoJSON(rt.geometry,{style:{weight:6}}).addTo(map);
- map.fitBounds(route.getBounds(),{padding:[30,30]});
- if(myMarker)map.removeLayer(myMarker);
- myMarker=L.marker([a.lat,a.lon],{icon:L.divIcon({className:'car-marker',html:'🚗',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(map).bindPopup('Your current position');
- roadInfo=null; nearbyFeatures=[]; lastFeatureFetch=0; lastAnnouncedCamera=null; lastAnnouncedLight=null; lastSpeedAnnounced=null;
- renderNavigation(rt,dest);
- speak('Route planned. '+Math.round(rt.duration/60)+' minutes. '+(routeSteps[0]?.maneuver?.instruction||''));
-}
-
-function speak(text){
- if(!voiceOn || !('speechSynthesis' in window) || !text)return;
- try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-GB';u.rate=.95;speechSynthesis.speak(u)}catch(e){}
-}
-function formatDistance(m){return m>=1609.344?(m/1609.344).toFixed(1)+' miles':Math.round(m*1.09361)+' yards'}
-function renderNavigation(rt,dest){
- const step=routeSteps[stepIndex];
- const instruction=step?.maneuver?.instruction||'Continue on the planned route.';
- const dist=step?formatDistance(step.distance):'';
- show(`<b>🧭 Navigation ready</b><div class="badge">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</div>
- <div class="notice"><b>${esc(instruction)}</b>${dist?`<br><span class="small">${esc(dist)}</span>`:''}</div>
- <div class="small">${(rt.distance/1609.344).toFixed(1)} miles · about ${Math.round(rt.duration/60)} min · ${esc(dest.name.split(',')[0])}</div>
- <div class="actions"><button onclick="startTracking()">▶ Start live navigation</button><button class="secondary" onclick="nextStep()">Next instruction</button></div><div class="actions"><button class="secondary" onclick="toggleVoice()">${voiceOn?'Mute voice':'Voice on'}</button></div>
- <div class="actions"><button class="secondary" onclick="savePlace(${JSON.stringify(dest)})">Save destination</button><button class="secondary" onclick="hide()">Close</button></div>`);
-}
-function nextStep(){
- if(stepIndex<routeSteps.length-1){stepIndex++;const st=routeSteps[stepIndex];speak(st.maneuver?.instruction||'Continue');
-  const rt=route?null:null;
-  show(`<b>🧭 Next instruction</b><div class="notice"><b>${esc(st.maneuver?.instruction||'Continue')}</b><br><span class="small">${esc(formatDistance(st.distance))}</span></div><div class="small">Instruction ${stepIndex+1} of ${routeSteps.length}</div><div class="actions"><button onclick="nextStep()">Next</button><button class="secondary" onclick="toggleVoice()">${voiceOn?'Mute voice':'Voice on'}</button></div>`);
- }else{ speak('You have reached the end of the planned route.'); show('<b>🏁 Route complete</b><div class="small">You have reached the final planned instruction.</div>'); }
-}
-function toggleVoice(){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis'in window)speechSynthesis.cancel();else speak('Voice guidance on'); if(routeSteps.length){const st=routeSteps[stepIndex];show(`<b>🧭 Navigation</b><div class="notice"><b>${esc(st?.maneuver?.instruction||'Continue')}</b></div><div class="actions"><button onclick="nextStep()">Next instruction</button><button class="secondary" onclick="toggleVoice()">${voiceOn?'Mute voice':'Voice on'}</button></div>`);}}
-
-function tab(t,b){
- activate(b);
- if(t==='find')hide();
- if(t==='route'){
-  if(current)routeTo(current);
-  else show('<b>🚗 Route</b><div class="small">Find a destination first, or scan an address.</div><div class="actions"><button onclick="useLocation()">Use my location</button></div>');
- }
- if(t==='saved'){
-  const a=saved();
-  show('<b>🏷️ Saved places</b>'+(
-   a.length?a.map(x=>`<div class="item"><b>${esc(x.name.split(",")[0])}</b><div class="small">${esc(x.name)}</div><div class="actions"><button onclick='selectPlace(${JSON.stringify(x)})'>Show</button><button onclick='routeTo(${JSON.stringify(x)})'>Route</button><button class="danger" onclick='deletePlace(${x.id})'>Delete</button></div></div>`).join('')
-   :'<div class="small">Nothing saved yet.</div>'));
- }
- if(t==='scan')scanUI();
-}
-
-function scanUI(){
- show(`<b>📷 Scan an address</b>
- <div class="small">Take a photo of an address, sign or label. MAPSUK reads the visible text, then lets you confirm the result before mapping or routing.</div>
- <input id="photo" type="file" accept="image/*" capture="environment" style="margin-top:9px" onchange="scanPhoto(this)">
- <img id="scanPreview" alt="Address photo preview">
- <div class="notice">Privacy: the image is processed in your browser for this feature and is not added to your MAPSUK saved places.</div>`);
-}
-
-async function scanPhoto(input){
- const file=input.files?.[0];if(!file)return;
- const img=document.getElementById('scanPreview');img.src=URL.createObjectURL(file);img.style.display='block';
- show('<b>📷 Reading address…</b><div class="small">This can take a little while on a phone.</div>'+img.outerHTML);
- try{
-  const result=await Tesseract.recognize(file,'eng',{logger:m=>{
-   if(m.status==='recognizing text'&&m.progress)show(`<b>📷 Reading address…</b><div class="small">${Math.round(m.progress*100)}% complete</div>`);
-  }});
-  const text=result.data.text.trim();
-  if(!text){show('<b>No readable text found</b><div class="small">Try a clearer photo with the address larger and better lit.</div>');return}
-  show(`<b>Address text detected</b><div class="notice">${esc(text).replace(/\n/g,'<br>')}</div>
-  <div class="small">Check the text before searching. OCR can misread house numbers or postcodes.</div>
-  <div class="search"><input id="ocrText" value="${esc(text.replace(/\s+/g,' ').trim())}"><button onclick="searchOCR()">Find</button></div>`);
- }catch(e){show('<b>Scan error</b><div class="small">'+esc(e.message)+'</div>')}
-}
-
-async function searchOCR(){
- const q=document.getElementById('ocrText').value.trim();if(!q)return;
- document.getElementById('q').value=q; await find();
-}
-
-map.on('click',e=>{
- current=null;
- if(pin)map.removeLayer(pin);
- pin=L.marker(e.latlng).addTo(map);
- show(`<b>Map point</b><div class="small">Selected location: ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}</div>
- <div class="actions"><button onclick="lookupPoint(${e.latlng.lat},${e.latlng.lng})">Identify place</button></div>`);
-});
-async function lookupPoint(lat,lon){
- try{show('<b>Identifying…</b>');const x=await reverse(lat,lon);selectPlace({lat,lon,display_name:x.display_name||`${lat}, ${lon}`})}
- catch(e){show('<b>Could not identify</b><div class="small">'+esc(e.message)+'</div>')}
-}
-
-document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')find()});
+function showGpsHelp(){show('<b>📍 GPS troubleshooting</b><div class="small">1. Android Settings → Location → switch Location on.<br>2. Chrome → site controls → Permissions → Location → Allow.<br>3. Reload MAPSUK from its HTTPS GitHub Pages address.<br>4. Return to MAPSUK and press ◎ again.</div>')}
+function startTracking(){if(watchId!==null)navigator.geolocation.clearWatch(watchId);if(!navigator.geolocation)return;watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});marker.addTo(map);hide()}
+function stopTracking(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}}
+function placeMarker(lat,lon){marker.setLngLat([lon,lat]);markerEl.style.transform=`rotate(${lastHeading}deg)`}
+async function onPosition(p){const lat=p.coords.latitude,lon=p.coords.longitude,acc=Math.round(p.coords.accuracy||0);let h=p.coords.heading;if(h==null||h<0){if(lastPos)h=bearing(lastPos.lat,lastPos.lon,lat,lon)}if(Number.isFinite(h))lastHeading=h;lastPos={lat,lon};placeMarker(lat,lon);map.easeTo({center:[lon,lat],zoom:Math.max(map.getZoom(),16),pitch:55,bearing:lastHeading,offset:[0,120],duration:500});$('roadMeta').textContent='GPS ±'+acc+' m • live driving view';if(steps.length){const st=steps[stepIndex],loc=st?.maneuver?.location;if(loc&&hav(lat,lon,loc[1],loc[0])<45&&stepIndex<steps.length-1){stepIndex++;updateTurn();speak(steps[stepIndex]?.maneuver?.instruction||'Continue')}const off=nearestRouteDistance(lat,lon);if(off>70&&Date.now()-lastOffRoute>15000&&!rerouting){lastOffRoute=Date.now();reroute(lat,lon)}}await fetchRoadData(lat,lon);renderAlerts(lat,lon)}
+async function reroute(lat,lon){if(!current)return;rerouting=true;speak('You are off route. Recalculating.');$('roadMeta').textContent='Off route • recalculating';await routeTo({lat,lon},current);rerouting=false}
+function onPositionError(e){$('roadMeta').textContent='GPS '+(e.code===1?'permission denied':e.code===2?'unavailable':e.code===3?'timeout':'error')+' • '+(e.message||'check Location')}
+function parseSpeed(v){if(!v)return null;const m=String(v).match(/(\d+(?:\.\d+)?)\s*(mph|km\/h|kph)?/i);if(!m)return null;let n=+m[1];if(/km/i.test(m[2]||''))n=n*.621371;return Math.round(n)}
+function implicitSpeed(t){if(t.maxspeed){const n=parseSpeed(t.maxspeed);if(n)return {mph:n,source:'mapped limit'}}const typ=String(t['maxspeed:type']||'');if(/GB:motorway/i.test(typ))return {mph:70,source:'national motorway'};if(/GB:nsl_dual/i.test(typ))return {mph:70,source:'national dual carriageway'};if(/GB:nsl_single/i.test(typ))return {mph:60,source:'national single carriageway'};if(t.highway==='motorway'||t.highway==='motorway_link')return {mph:70,source:'motorway default'};if((t.highway==='trunk'||t.highway==='trunk_link')&&String(t.oneway)==='yes')return {mph:70,source:'dual-carriageway default'};if(t.highway==='living_street')return {mph:20,source:'living street default'};if(t.highway==='residential'||t.lit==='yes')return {mph:30,source:'built-up default'};if(['primary','secondary','tertiary','unclassified'].includes(t.highway))return {mph:60,source:'national single-carriageway default'};return null}
+async function fetchRoadData(lat,lon){if(Date.now()-lastFeatureFetch<8000)return;lastFeatureFetch=Date.now();const b=`${lat-.004},${lon-.006},${lat+.004},${lon+.006}`;const q=`[out:json][timeout:12];(way[highway](${b});node[highway=traffic_signals](${b});node[highway=speed_camera](${b}););out body geom;`;try{const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});if(!r.ok)throw 0;const j=await r.json();let best=null;nearby=[];for(const e of j.elements||[]){if(e.type==='way'&&e.geometry){let d=Infinity;for(const p of e.geometry)d=Math.min(d,hav(lat,lon,p.lat,p.lon));if(d<180&&(!best||d<best.distance))best={...implicitSpeed(e.tags||{}),distance:d,name:e.tags?.name||'',highway:e.tags?.highway||'',tags:e.tags||{}}}else if(e.type==='node'&&e.lat!=null){const d=hav(lat,lon,e.lat,e.lon);if(d<700)nearby.push({type:e.tags?.highway==='speed_camera'?'camera':'light',lat:e.lat,lon:e.lon,distance:d})}}roadInfo=best;if(best){$('speedLimit').textContent=best.mph+' mph';$('speedSource').textContent=best.source;$('roadName').textContent=best.name||'Road'}else{$('speedLimit').textContent='—';$('speedSource').textContent='No mapped road data'}}catch(e){}}
+function renderAlerts(lat,lon){const a=[];const cam=nearby.filter(x=>x.type==='camera').sort((x,y)=>x.distance-y.distance)[0];const light=nearby.filter(x=>x.type==='light').sort((x,y)=>x.distance-y.distance)[0];if(cam&&cam.distance<250)a.push(`<div class="alert camera">📷 Speed camera ${fmtDist(cam.distance)}</div>`);if(light&&light.distance<180)a.push(`<div class="alert light">🚦 Traffic lights ${fmtDist(light.distance)}</div>`);$('alerts').innerHTML=a.join('');if(cam&&cam.distance<120&&cam.distance>60&&lastCamera!==Math.round(cam.lat*1e5)){lastCamera=Math.round(cam.lat*1e5);speak('Speed camera ahead, '+fmtDist(cam.distance))}if(light&&light.distance<100&&light.distance>45&&lastLight!==Math.round(light.lat*1e5)){lastLight=Math.round(light.lat*1e5);speak('Traffic lights ahead, '+fmtDist(light.distance))}}
+let lastCamera=null,lastLight=null;
+function toggleVoice(){voiceOn=!voiceOn;$('voiceBtn').textContent=voiceOn?'🔊':'🔇';if(!voiceOn&&'speechSynthesis'in window)speechSynthesis.cancel();else speak('Voice guidance on')}
+init();
 </script>
-<footer style="position:absolute;z-index:1050;left:10px;top:10px;pointer-events:none"><span class="badge">Free • privacy-first • road intelligence</span></footer>
 </body>
 </html>
