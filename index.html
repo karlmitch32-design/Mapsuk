@@ -56,7 +56,9 @@
 /* V11 NEON 3D DRIVING SKIN — inspired by the supplied simulator layout */
 :root{--neon-cyan:#00f0ff;--neon-pink:#ff007f;--neon-blue:#168cff;--neon-bg:#05050a;--neon-panel:rgba(7,12,24,.90);--neon-muted:#8a99ad}
 body{background:var(--neon-bg)!important}
-#map{inset:-14%;width:128%;height:128%;background:var(--neon-bg)!important;transform:perspective(950px) rotateX(12deg) scale(1.08);transform-origin:50% 72%;box-shadow:inset 0 -140px 160px rgba(0,0,0,.52)}
+#map{inset:0;width:100%;height:100%;background:var(--neon-bg)!important;box-shadow:inset 0 -140px 160px rgba(0,0,0,.52)}
+/* True driving-style visual treatment: tilt and rotate the map pane, not the whole UI. */
+.drive-active .leaflet-map-pane{transform:perspective(900px) rotateZ(var(--map-rotate, 0deg)) rotateX(56deg) scale(1.18);transform-origin:50% 78%;will-change:transform}
 .leaflet-container{background:var(--neon-bg)!important}
 .leaflet-tile-pane{filter:brightness(.58) saturate(1.45) contrast(1.18)}
 .leaflet-overlay-pane{filter:drop-shadow(0 0 7px rgba(0,240,255,.34))}
@@ -88,8 +90,9 @@ body{background:var(--neon-bg)!important}
 .drive-active .sheet-road span:last-child{color:var(--neon-muted)}
 /* Blue navigation arrow becomes the simulator-style glowing locator */
 .muk-car .car-arrow{color:#00bfff!important;filter:drop-shadow(0 0 5px #00bfff) drop-shadow(0 0 13px rgba(0,240,255,.85))!important;text-shadow:0 0 10px #00f0ff!important}
-/* Make the active route unmistakably neon cyan */
-.route-casing{filter:drop-shadow(0 0 7px rgba(0,240,255,.85)) drop-shadow(0 0 16px rgba(0,240,255,.38))!important}
+/* Active route remains neon and highly visible, with the requested red route core. */
+.route-casing{filter:drop-shadow(0 0 7px rgba(255,0,60,.9)) drop-shadow(0 0 16px rgba(255,0,60,.42))!important}
+.drive-active .leaflet-overlay-pane path{stroke:#ff1744!important}
 /* Existing route layers are restyled at the Leaflet SVG path level */
 .leaflet-overlay-pane path{stroke-linecap:round;stroke-linejoin:round}
 /* Driving controls match the neon simulator */
@@ -192,8 +195,8 @@ function manualStart(){show(`<b>Starting point</b><div class="searchbox" style="
 async function manualRoute(){const q=document.getElementById('start').value.trim();if(!q)return;try{const d=await geo(q);if(!d.length)throw Error('Starting point not found');await buildRoute({lat:+d[0].lat,lon:+d[0].lon},current,true)}catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}}
 function makeGraphicalRoute(geo){
  const group=L.featureGroup();
- L.geoJSON(geo,{style:{color:'#21050a',weight:14,opacity:.92,lineCap:'round',lineJoin:'round',className:'route-casing'}}).addTo(group);
- L.geoJSON(geo,{style:{color:'#ff1838',weight:5,opacity:.98,lineCap:'round',lineJoin:'round'}}).addTo(group);
+ L.geoJSON(geo,{style:{color:'#001d2a',weight:14,opacity:.92,lineCap:'round',lineJoin:'round',className:'route-casing'}}).addTo(group);
+ L.geoJSON(geo,{style:{color:'#00f0ff',weight:5,opacity:.98,lineCap:'round',lineJoin:'round'}}).addTo(group);
  return group;
 }
 
@@ -257,11 +260,14 @@ function updateStats(p){
 function applyMapVisual(){
  const el=myMarker?.getElement?.();
  const car=el?.querySelector('.car-arrow');
- if(car) car.style.transform=`rotate(${northUp?0:mapHeading}deg)`;
+ const h=northUp?0:mapHeading;
+ if(car) car.style.transform=`rotate(${h}deg)`;
+ const pane=map.getPane('mapPane');
+ if(pane){pane.style.setProperty('--map-bearing',String(h));pane.style.setProperty('--map-rotate',(-h)+'deg');}
 }
 function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;applyMapVisual();}
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
-function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=90;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
+function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=145;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');el.classList.remove('show');}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');el.textContent=msg;el.classList.add('show');}
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180, x1=(a.lon-p.lon)*Math.cos(meanLat),y1=a.lat-p.lat,x2=(b.lon-p.lon)*Math.cos(meanLat),y2=b.lat-p.lat;const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(0-x1)*dx+(0-y1)*dy)/(dx*dx+dy*dy||1));const q={lat:p.lat+(y1+t*dy),lon:p.lon+(x1+t*dx)/Math.cos(meanLat)};return {d:hav(p,q),q};}
@@ -329,7 +335,7 @@ async function navigationEngine(p){
  // Ignore the artificial depart step for spoken/displayed manoeuvre warnings.
  if(!actionableStep(st)){renderDrive(p);return;}
  const key='warn'+stepIndex;
- const thresholds=(type==='roundabout'||type==='rotary')?[520,190,45]:[520,190,45];
+ const thresholds=(type==='roundabout'||type==='rotary')?[145,78,34]:[520,190,45];
  if(distTo<thresholds[0]&&!announced[key+'a']){
    announced[key+'a']=1;
    const txt=type==='roundabout'||type==='rotary'?`Roundabout ahead in ${formatDistance(distTo)}. ${mannerRoundabout(st)}`:`Junction ahead in ${formatDistance(distTo)}. ${manner(st)}${roadName(st)?' onto '+roadName(st):''}.`;
@@ -343,11 +349,28 @@ async function navigationEngine(p){
 
 function manner(st){return maneuverLabel(st).toLowerCase()}
 function mannerRoundabout(st){const ex=st.maneuver?.exit;return ex?`take the ${ordinal(ex)} exit`:'take the correct exit'}
-async function trafficLightAlert(p){if(Date.now()-trafficFetchedAt>30000){try{const q=`[out:json][timeout:8];node(around:180,${p.lat},${p.lon})[highway=traffic_signals];out;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(r.ok){const j=await r.json();trafficCache=(j.elements||[]).map(e=>({lat:e.lat,lon:e.lon}));trafficFetchedAt=Date.now()}}catch(e){}}if(!trafficCache.length||p.heading==null)return;for(const l of trafficCache){const d=hav(p,l);if(d>25&&d<180){const b=bearing(p,l);if(angleDiff(p.heading,b)<35){const near=nearestOnRoute(l);const carNear=nearestOnRoute(p);if(near.d<45&&near.index>=carNear.index){const key='light'+Math.round(l.lat*1e5)+'_'+Math.round(l.lon*1e5);if(!announced[key]){announced[key]=1;speak(`Traffic lights ahead in ${formatDistance(d)}.`)}return}}}}}
+async function trafficLightAlert(p){
+ if(Date.now()-trafficFetchedAt>30000){try{const q=`[out:json][timeout:8];node(around:220,${p.lat},${p.lon})[highway=traffic_signals];out;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(r.ok){const j=await r.json();trafficCache=(j.elements||[]).map(e=>({lat:e.lat,lon:e.lon}));trafficFetchedAt=Date.now()}}catch(e){}}
+ if(!trafficCache.length||p.heading==null)return;
+ for(const l of trafficCache){
+   const d=hav(p,l);
+   if(d>25&&d<135){
+     const b=bearing(p,l);
+     if(angleDiff(p.heading,b)<32){
+       const near=nearestOnRoute(l);const carNear=nearestOnRoute(p);
+       if(near.d<45&&near.index>=carNear.index){
+         const key='light'+Math.round(l.lat*1e5)+'_'+Math.round(l.lon*1e5);
+         if(!announced[key+'a']&&d<=125){announced[key+'a']=1;speak(`Traffic lights ahead in ${formatDistance(d)}.`);return}
+         if(!announced[key+'b']&&d<=55){announced[key+'b']=1;speak('Traffic lights ahead.');return}
+       }
+     }
+   }
+ }
+}
 
 function carIcon(){
- const html='<div class="car-arrow" style="width:42px;height:56px;display:flex;align-items:center;justify-content:center;font-size:42px;line-height:1;color:#1976ff;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));transform-origin:center">▲</div>';
- return L.divIcon({className:'muk-car',html,iconSize:[38,52],iconAnchor:[19,26]});
+ const html='<div class="car-arrow" style="width:38px;height:52px;display:flex;align-items:flex-start;justify-content:center;font-size:42px;line-height:1;color:#168cff;filter:drop-shadow(0 0 5px #168cff) drop-shadow(0 0 12px rgba(0,240,255,.9));transform-origin:50% 50%">▲</div>';
+ return L.divIcon({className:'muk-car',html,iconSize:[38,52],iconAnchor:[19,49]});
 }
 function actionableStep(st){
  const t=st?.maneuver?.type||'';
