@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — Neon 90° Driving V12</title>
+<title>MUK SATNAV 86 — Neon 3D Driving V11</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
@@ -56,7 +56,7 @@
 /* V11 NEON 3D DRIVING SKIN — inspired by the supplied simulator layout */
 :root{--neon-cyan:#00f0ff;--neon-pink:#ff007f;--neon-blue:#168cff;--neon-bg:#05050a;--neon-panel:rgba(7,12,24,.90);--neon-muted:#8a99ad}
 body{background:var(--neon-bg)!important}
-#map{inset:-14%;width:128%;height:128%;background:var(--neon-bg)!important;transform:perspective(950px) rotateX(25deg) scale(1.08);transform-origin:50% 72%;box-shadow:inset 0 -140px 160px rgba(0,0,0,.52)}
+#map{inset:-14%;width:128%;height:128%;background:var(--neon-bg)!important;transform:perspective(950px) rotateX(12deg) scale(1.08);transform-origin:50% 72%;box-shadow:inset 0 -140px 160px rgba(0,0,0,.52)}
 .leaflet-container{background:var(--neon-bg)!important}
 .leaflet-tile-pane{filter:brightness(.58) saturate(1.45) contrast(1.18)}
 .leaflet-overlay-pane{filter:drop-shadow(0 0 7px rgba(0,240,255,.34))}
@@ -110,79 +110,8 @@ body{background:var(--neon-bg)!important}
  .drive-active .speed-block b{font-size:19px}
 }
 
-
-/* V12 — 90°-STYLE FORWARD DRIVING VIEW
-   The map is deliberately pitched strongly toward the horizon so it reads as
-   a road-ahead sat-nav view rather than a top-down map. */
-:root{
-  --v12-red:#ff1744;
-  --v12-red-deep:#650014;
-  --v12-blue:#168cff;
-  --v12-blue-bright:#00a8ff;
-}
-#map{
-  inset:-22%;
-  width:144%;
-  height:144%;
-  transform:perspective(760px) rotateX(63deg) scale(1.18);
-  transform-origin:50% 76%;
-  background:#03050a!important;
-}
-.leaflet-container{background:#03050a!important}
-.leaflet-tile-pane{
-  filter:brightness(.48) saturate(1.65) contrast(1.25);
-}
-.leaflet-overlay-pane{
-  filter:drop-shadow(0 0 8px rgba(255,23,68,.48));
-}
-/* Neon-red route: dark red casing + brilliant red core */
-.route-casing{
-  stroke:#650014!important;
-  filter:
-    drop-shadow(0 0 4px rgba(255,23,68,.95))
-    drop-shadow(0 0 13px rgba(255,23,68,.62))
-    drop-shadow(0 0 25px rgba(255,23,68,.25))!important;
-}
-.route-neon-red{
-  stroke:#ff1744!important;
-  filter:
-    drop-shadow(0 0 4px #ff1744)
-    drop-shadow(0 0 11px rgba(255,23,68,.9))
-    drop-shadow(0 0 22px rgba(255,23,68,.52));
-}
-.leaflet-overlay-pane path{
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
-/* Neon-blue vehicle arrow */
-.muk-car .car-arrow,
-.muk-car .car-arrow *{
-  color:#00a8ff!important;
-  fill:#00a8ff!important;
-  stroke:#00a8ff!important;
-  filter:
-    drop-shadow(0 0 4px #008cff)
-    drop-shadow(0 0 10px #00a8ff)
-    drop-shadow(0 0 20px rgba(0,168,255,.9))!important;
-  text-shadow:
-    0 0 7px #008cff,
-    0 0 15px #00a8ff,
-    0 0 25px rgba(0,168,255,.9)!important;
-}
-/* Keep the vehicle marker visually lower on the screen, like a real sat-nav */
-.muk-car{
-  transform-origin:50% 50%;
-  filter:drop-shadow(0 0 8px rgba(0,168,255,.85));
-}
-/* Red route should remain visually dominant over the darkened road tiles */
-.drive-active .routebar{
-  border-color:rgba(255,23,68,.8)!important;
-  box-shadow:0 0 14px rgba(255,23,68,.35)!important;
-}
-
 </style>
 </head>
-<!-- MUK SATNAV 86 V12: 90-degree-style forward driving perspective, neon-red route, neon-blue navigation arrow. GitHub-ready. -->
 <body>
 <div id="app">
 <div id="map"></div>
@@ -263,8 +192,8 @@ function manualStart(){show(`<b>Starting point</b><div class="searchbox" style="
 async function manualRoute(){const q=document.getElementById('start').value.trim();if(!q)return;try{const d=await geo(q);if(!d.length)throw Error('Starting point not found');await buildRoute({lat:+d[0].lat,lon:+d[0].lon},current,true)}catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}}
 function makeGraphicalRoute(geo){
  const group=L.featureGroup();
- L.geoJSON(geo,{style:{color:'#3b0010',weight:15,opacity:.96,lineCap:'round',lineJoin:'round',className:'route-casing'}}).addTo(group);
- L.geoJSON(geo,{style:{color:'#ff1744',weight:6,opacity:1,lineCap:'round',lineJoin:'round',className:'route-neon-red'}}).addTo(group);
+ L.geoJSON(geo,{style:{color:'#21050a',weight:14,opacity:.92,lineCap:'round',lineJoin:'round',className:'route-casing'}}).addTo(group);
+ L.geoJSON(geo,{style:{color:'#ff1838',weight:5,opacity:.98,lineCap:'round',lineJoin:'round'}}).addTo(group);
  return group;
 }
 
