@@ -3,391 +3,567 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon 3V Navigation Engine</title>
-    <!-- MapLibre GL JS -->
+    <title>Advanced UK SatNav Dashboard Engine - Woking Edition</title>
+    
+    <!-- High-Performance 3D Vector Map Engine Engine Dependencies -->
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+
     <style>
+        /* 1. MASTER THEME CONSTANTS & RESET */
+        :root {
+            --bg-dark-primary: #0d1117;
+            --bg-dark-secondary: #161b22;
+            --border-glow-blue: #00f0ff;
+            --accent-green: #56d364;
+            --accent-error: #ff3333;
+            --text-main: #ffffff;
+            --text-muted: #8b949e;
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
+
         body, html {
             width: 100%;
             height: 100%;
-            background-color: #05050A;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
+            background-color: var(--bg-dark-primary);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
         }
-        #map {
+
+        /* 2. THE MASTER SATNAV GRID VIEWPORT CONTAINER */
+        #master-satnav-frame {
+            display: grid;
+            grid-template-columns: 1fr 0fr; /* Spans 100% width until split-screen trigger acts */
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            transition: grid-template-columns 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #master-satnav-frame.split-screen-junction-active {
+            grid-template-columns: 1.1fr 0.9fr; /* Creates side-by-side cockpit and highway layout panels */
+        }
+
+        #satnav-dashboard-viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        #core-3d-map-viewport {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 3. SPEED BREACH FLASHING KEYFRAMES */
+        #master-satnav-frame.uk-speed-breach-imminent #speed-hud-box {
+            background-color: var(--accent-error) !important;
+            border-color: #ffaaaa !important;
+            animation: criticalSpeedPulse 0.4s infinite alternate;
+        }
+
+        @keyframes criticalSpeedPulse {
+            from { box-shadow: 0 0 10px rgba(255, 51, 51, 0.6); }
+            to { box-shadow: 0 0 25px rgba(255, 51, 51, 0.9); }
+        }
+
+        /* 4. HEADS UP TELEMETRY OVERLAYS */
+        .satnav-telemetry-top-strip {
             position: absolute;
             top: 0;
-            bottom: 0;
+            left: 0;
             width: 100%;
-            z-index: 1;
-        }
-        /* Top Navigation Banner matching user UI */
-        .nav-banner {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 92%;
-            max-width: 500px;
-            background: rgba(10, 13, 32, 0.9);
-            border: 2px solid #00F0FF;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
-            border-radius: 14px;
-            padding: 16px 20px;
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            z-index: 10;
-        }
-        .turn-arrow {
-            width: 44px;
-            height: 44px;
-            border: 3px solid #00F0FF;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 24px;
-            color: #00F0FF;
-            text-shadow: 0 0 8px #00F0FF;
-        }
-        .nav-text {
-            display: flex;
-            flex-direction: column;
-        }
-        .nav-text .direction-text {
-            font-size: 20px;
-            font-weight: 800;
-            color: #00F0FF;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .nav-text .street {
-            font-size: 14px;
-            color: #8A99AD;
-            margin-top: 2px;
-        }
-        .nav-distance {
-            margin-left: auto;
-            font-size: 22px;
-            font-weight: 800;
-            color: #00F0FF;
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
-        }
-        /* Bottom HUD Stats Panel matching user UI */
-        .hud-panel {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 92%;
-            max-width: 500px;
-            background: rgba(5, 5, 10, 0.95);
-            border-bottom: 5px solid #FF007F;
-            border-radius: 12px;
-            padding: 15px 20px;
-            color: #FFFFFF;
-            z-index: 10;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .hud-row-top {
+            height: 50px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 10px;
+            padding: 0 20px;
+            z-index: 1000;
         }
-        .hud-stat {
-            text-align: center;
-            flex: 1;
-        }
-        .hud-stat-val {
-            font-size: 26px;
-            font-weight: 900;
-        }
-        .hud-stat-val.arrival { color: #00F0FF; }
-        .hud-stat-val.remaining { color: #FFFFFF; }
-        .hud-stat-val.speed { color: #FF007F; text-shadow: 0 0 10px rgba(255,0,127,0.4); }
-        .hud-stat-val.limit { color: #FFFFFF; }
-        .hud-stat-lbl {
-            font-size: 10px;
-            font-weight: 700;
-            color: #8A99AD;
-            text-transform: uppercase;
-            margin-top: 4px;
-            letter-spacing: 0.5px;
-        }
-        .hud-row-bottom {
+
+        .telemetry-pill-group {
             display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .hud-msg-left { color: #FFFFFF; }
-        .hud-msg-right { color: #8A99AD; }
-        
-        /* Floating Right Action Buttons */
-        .map-controls {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
             gap: 15px;
-            z-index: 10;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
         }
-        .control-btn {
-            width: 46px;
-            height: 46px;
-            background: rgba(10, 13, 32, 0.9);
-            border: 2px solid #00F0FF;
-            border-radius: 50%;
-            color: #00F0FF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        .pill-green { color: var(--accent-green); }
+        .pill-blue { color: #58a6ff; }
+
+        /* 5. LIVE ADDRESS SEARCH INTERFACE CONTAINER */
+        .search-container-box {
+            position: absolute;
+            top: 65px;
+            left: 20px;
+            z-index: 1001;
+            width: 340px;
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .search-container-box input {
+            width: 100%;
+            padding: 12px 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+        }
+
+        #search-dropdown-results-container {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .address-suggestion-card {
+            padding: 12px 15px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-muted);
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            font-size: 18px;
+            font-size: 13px;
             transition: all 0.2s ease;
         }
-        .control-btn:active {
-            transform: scale(0.9);
-            background: #00F0FF;
+
+        .address-suggestion-card:hover {
+            background: var(--border-glow-blue);
             color: #000000;
+        }
+
+        /* 6. COCKPIT CONSOLE PANEL & CONTROLS */
+        .cockpit-bottom-hud {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 90px;
+            background: rgba(22, 27, 34, 0.92);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            box-shadow: 0 -4px 25px rgba(0,0,0,0.4);
+        }
+
+        .hud-metric-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hud-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .hud-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        #speed-hud-box {
+            background: #1f242c;
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 2px solid #30363d;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .hud-control-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .satnav-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .satnav-btn:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+
+        /* 7. RE-ROUTING/PREVIEW FLIGHT DECK */
+        .route-preview-deck-panel {
+            position: absolute;
+            bottom: 125px;
+            left: 20px;
+            width: 340px;
+            max-height: 200px;
+            background: rgba(13, 17, 23, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            z-index: 999;
+            padding: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .preview-header {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-step-card {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        /* 8. AUXILIARY HIGHWAY LANE SPLIT PANEL */
+        #highway-junction-split-panel {
+            background: linear-gradient(180deg, #090e14 0%, #05070a 100%);
+            border-left: 2px solid var(--border-glow-blue);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 30px;
+            overflow: hidden;
+        }
+
+        .uk-overhead-signboard {
+            background: #004d26; /* Clean UK overhead road signage green */
+            border: 4px solid #ffffff;
+            border-radius: 8px;
+            width: 90%;
+            padding: 20px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 20px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            margin-bottom: 40px;
+            white-space: pre-line;
+            letter-spacing: 1px;
+        }
+
+        .motorway-sign-blue {
+            background: #005aa7 !important; /* UK Motorway Standard Blue */
+        }
+
+        .lane-arrows-vector-box {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .lane-arrow-indicator {
+            width: 45px;
+            height: 90px;
+            background-color: #666; /* Inactive lane */
+            clip-path: polygon(40% 100%, 60% 100%, 60% 40%, 90% 40%, 50% 0%, 100% 0, 10% 40%, 40% 40%);
+            transition: background-color 0.3s;
+        }
+
+        .lane-arrow-indicator.lane-highlight-active {
+            background-color: var(--border-glow-blue); /* Highlighted navigation path */
+            filter: drop-shadow(0 0 8px var(--border-glow-blue));
         }
     </style>
 </head>
 <body>
 
-    <div class="nav-banner">
-        <div class="turn-arrow">➔</div>
-        <div class="nav-text">
-            <div class="direction-text">Turn Right</div>
-            <div class="street">Malpas Road</div>
-        </div>
-        <div class="nav-distance">140 yd</div>
-    </div>
+    <div id="master-satnav-frame" class="uk-speed-normal">
 
-    <div class="map-controls">
-        <div class="control-btn" id="recenter-btn">🎯</div>
-        <div class="control-btn" id="tilt-btn">3D</div>
-    </div>
-
-    <div class="hud-panel">
-        <div class="hud-row-top">
-            <div class="hud-stat">
-                <div class="hud-stat-val arrival">22:25</div>
-                <div class="hud-stat-lbl">Arrival</div>
+        <!-- Top Telemetry & Signal Quality Bar -->
+        <div class="satnav-telemetry-top-strip">
+            <div class="telemetry-pill-group">
+                <span>📡 SATS: <span class="pill-green">14 (LOCK)</span></span>
+                <span>SIGNAL: <span class="pill-green">3D ACCURATE</span></span>
+                <span>BATTERY: <span class="pill-blue">100% (LINE)</span></span>
             </div>
-            <div class="hud-stat">
-                <div class="hud-stat-val remaining">19m</div>
-                <div class="hud-stat-lbl">Remaining</div>
-            </div>
-            <div class="hud-stat">
-                <div class="hud-stat-val speed">42</div>
-                <div class="hud-stat-lbl">MPH</div>
-            </div>
-            <div class="hud-stat">
-                <div class="hud-stat-val limit">50</div>
-                <div class="hud-stat-lbl">Limit</div>
+            <div class="telemetry-pill-group">
+                <span id="hud-live-clock">--:--</span>
+                <span style="color: #ffca28; font-weight: bold;">ULEZ COMPLIANT ZONE</span>
             </div>
         </div>
-        <div class="hud-row-bottom">
-            <div class="hud-msg-left">Following active route</div>
-            <div class="hud-msg-right">GPS Signal OK</div>
-        </div>
-    </div>
 
-    <div id="map"></div>
+        <div id="satnav-dashboard-viewport">
+            <div class="search-container-box">
+                <input type="text" id="satnav-main-search-input" placeholder="Enter Woking street or UK postcode..." autocomplete="off">
+                <div id="search-dropdown-results-container"></div>
+            </div>
+
+            <div class="route-preview-deck-panel">
+                <div class="preview-header">Route Flight-Deck Overview</div>
+                <div id="dynamic-step-sequence-list">
+                    <div class="preview-step-card"><span>Initialize SatNav Engine near Woking Centre</span><th>START</th></div>
+                    <div class="preview-step-card"><span>Typing an address above fetches live OSM paths</span><th>OSRM</th></div>
+                </div>
+            </div>
+
+            <div class="cockpit-bottom-hud">
+                <div class="hud-metric-box">
+                    <div class="hud-label">Arrival ETA</div>
+                    <div class="hud-value" id="hud-eta-metric">--:--</div>
+                </div>
+                <div class="hud-metric-box">
+                    <div class="hud-label">Remaining</div>
+                    <div class="hud-value" id="hud-distance-metric">0.0 mi</div>
+                </div>
+                <div class="hud-metric-box" id="speed-hud-box">
+                    <div class="hud-label" style="color:#fff;">YOUR MPH</div>
+                    <div class="hud-value" id="hud-current-speed">0</div>
+                </div>
+                <div class="hud-metric-box">
+                    <div class="hud-label">UK Limit</div>
+                    <div class="hud-value" style="color: #ff3333; text-shadow: 0 0 4px rgba(255,0,0,0.3);" id="hud-speed-limit">30</div>
+                </div>
+                <div class="hud-control-buttons">
+                    <button class="satnav-btn" onclick="SatNavApplicationCore.toggleHUDMode()">HUD Flip</button>
+                    <button class="satnav-btn" onclick="SatNavApplicationCore.simulateVelocityBreach()">Sim Speed</button>
+                    <button class="satnav-btn" onclick="SatNavApplicationCore.toggleJunctionSplit()">Sim Exit</button>
+                </div>
+            </div>
+
+            <!-- Canvas Frame for 3D Map Viewport Insertion -->
+            <div id="core-3d-map-viewport"></div>
+        </div>
+
+        <div id="highway-junction-split-panel">
+            <div class="uk-overhead-signboard motorway-sign-blue" id="overhead-sign-text">
+                M25 London
+                Chertsey (A320)
+            </div>
+            <div class="lane-arrows-vector-box">
+                <div class="lane-arrow-indicator"></div>
+                <div class="lane-arrow-indicator lane-highlight-active"></div>
+                <div class="lane-arrow-indicator lane-highlight-active"></div>
+            </div>
+        </div>
+
+    </div>
 
     <script>
-        // Use a high-quality free open-source dark vector base theme from CartoDB
-        const mapStyle = {
-            version: 8,
-            sources: {
-                'cartodb-dark': {
-                    type: 'raster',
-                    tiles: [
-                        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                        'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-                    ],
-                    tileSize: 256,
-                    attribution: '© OpenStreetMap contributors © CARTO'
+        const SatNavApplicationCore = {
+            mapInstance: null,
+            state: {
+                isHUDActive: false,
+                isSplitActive: false,
+                simulatedSpeeding: false,
+                wokingCenterCoordinates: [-0.5593, 51.3190],
+                currentSpeedLimit: 30,
+                baseDurationSeconds: 1200,
+                congestionFactor: 1.25 // Heavy Woking traffic factor multiplier
+            },
+
+            // 1. SYSTEM INITIALIZER
+            init: function() {
+                this.registerSystemClock();
+                this.mount3DMapEngine();
+                this.bindSearchGeocoderInput();
+            },
+
+            // 2. MOUNT MAPLIBRE 3D COCKPIT CAMERA VIEWPORT
+            mount3DMapEngine: function() {
+                this.mapInstance = new maplibregl.Map({
+                    container: 'core-3d-map-viewport',
+                    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+                    center: this.state.wokingCenterCoordinates,
+                    zoom: 16.5,
+                    pitch: 65, // Steep Cockpit 3D Tilted View
+                    bearing: -15,
+                    antialias: true
+                });
+
+                this.mapInstance.on('load', () => {
+                    console.log("Vector Map Layer Delivery Confirmed.");
+                    this.executeTrafficETAComputation();
+                });
+            },
+
+            // 3. LIVE GEOCODER BUS SEARCH LOGIC (OSM Nominatim)
+            bindSearchGeocoderInput: function() {
+                const searchInput = document.getElementById('satnav-main-search-input');
+                const resultsBox = document.getElementById('search-dropdown-results-container');
+                let debounceTimeout;
+
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimeout);
+                    const query = e.target.value;
+
+                    if (query.length < 3) {
+                        resultsBox.innerHTML = '';
+                        return;
+                    }
+
+                    debounceTimeout = setTimeout(async () => {
+                        // Request matches strictly limited inside UK boundaries
+                        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=gb&limit=5`;
+                        try {
+                            const response = await fetch(url, { headers: { 'User-Agent': 'UKWebSatnavDashboardEngine/1.0' } });
+                            const cards = await response.json();
+                            resultsBox.innerHTML = '';
+
+                            cards.forEach(item => {
+                                const card = document.createElement('div');
+                                card.className = 'address-suggestion-card';
+                                card.innerText = item.display_name.split(',').slice(0, 3).join(',');
+                                
+                                card.onclick = () => {
+                                    const lon = parseFloat(item.lon);
+                                    const lat = parseFloat(item.lat);
+                                    this.calculateLiveOSRMRoute([lon, lat]);
+                                    resultsBox.innerHTML = '';
+                                    searchInput.value = card.innerText;
+                                };
+                                resultsBox.appendChild(card);
+                            });
+                        } catch (err) {
+                            console.error("Geocoder lookup timeout:", err);
+                        }
+                    }, 400);
+                });
+            },
+
+            // 4. DYNAMIC TRAFFIC OVERHEAD CONGESTION COMPENSATOR
+            executeTrafficETAComputation: function() {
+                const totalAdjustedSeconds = this.state.baseDurationSeconds * this.state.congestionFactor;
+                const currentTimeMs = new Date().getTime();
+                const arrivalDate = new Date(currentTimeMs + totalAdjustedSeconds * 1000);
+                
+                document.getElementById('hud-eta-metric').innerText = arrivalDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('hud-distance-metric').innerText = ((this.state.baseDurationSeconds * 0.011) * 0.621371).toFixed(1) + " mi";
+            },
+
+            // 5. LIVE ROUTING INJECTOR ENGINE (OSRM)
+            calculateLiveOSRMRoute: async function(targetCoord) {
+                const start = this.state.wokingCenterCoordinates;
+                const url = `https://router.project-osrm.org/route/v1/driving/${start.join(',')};${targetCoord.join(',')}?steps=true&geometries=geojson`;
+                
+                try {
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    if (data.code === 'Ok' && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        this.state.baseDurationSeconds = route.duration;
+                        this.executeTrafficETAComputation();
+                        this.plotRoutePolyline(route.geometry);
+                        this.populateTurnSequenceDeck(route.legs[0].steps);
+                        
+                        // Fly map camera to start tracking the vector path smoothly
+                        this.mapInstance.flyTo({ center: start, zoom: 17, pitch: 65 });
+                    }
+                } catch(e) {
+                    console.error("OSRM Endpoint Router Unreachable:", e);
                 }
             },
-            layers: [
-                {
-                    id: 'background',
-                    type: 'background',
-                    paint: { 'background-color': '#05050A' }
-                },
-                {
-                    id: 'base-tiles',
-                    type: 'raster',
-                    source: 'cartodb-dark',
-                    paint: { 'raster-opacity': 0.85 }
-                }
-            ]
-        };
 
-        // Coordinates derived from user image context (Newport / Malpas Road region, UK)
-        const startCoords = [-3.0035, 51.6025]; 
-        
-        // Define a sharp zigzag simulated route line
-        const routeCoordinates = [
-            [-3.0045, 51.5990],
-            [-3.0035, 51.6015],
-            [-3.0032, 51.6028],
-            [-3.0010, 51.6045],
-            [-2.9975, 51.6070],
-            [-2.9950, 51.6110]
-        ];
-
-        // Initialize MapLibre Engine
-        const map = new maplibregl.Map({
-            container: 'map',
-            style: mapStyle,
-            center: startCoords,
-            zoom: 16.5,
-            pitch: 60,       // Crucial: Low trailing angle camera tilt (0-85 degrees)
-            bearing: 15,     // Align rotation with the road trajectory direction
-            antialias: true
-        });
-
-        map.on('load', () => {
-            // Add Neon Glowing Active Route GeoJSON Layer
-            map.addSource('route', {
-                type: 'geojson',
-                data: {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: routeCoordinates
-                    }
-                }
-            });
-
-            // Outer Neon Glow Layer
-            map.addLayer({
-                id: 'route-glow',
-                type: 'line',
-                source: 'route',
-                layout: {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                paint: {
-                    'line-color': '#FF007F',
-                    'line-width': 12,
-                    'line-opacity': 0.4
-                }
-            });
-
-            // Inner Sharp Cyan Vector Strand
-            map.addLayer({
-                id: 'route-core',
-                type: 'line',
-                source: 'route',
-                layout: {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                paint: {
-                    'line-color': '#00F0FF',
-                    'line-width': 5,
-                    'line-opacity': 1.0
-                }
-            });
-
-            // Custom HTML element for the trailing navigation arrow icon
-            const el = document.createElement('div');
-            el.className = 'vehicle-marker';
-            el.style.width = '0';
-            el.style.height = '0';
-            el.style.borderLeft = '12px solid transparent';
-            el.style.borderRight = '12px solid transparent';
-            el.style.borderBottom = '28px solid #FF007F';
-            el.style.filter = 'drop-shadow(0px 0px 8px #FF007F)';
-
-            // Place marker at vehicle origin point
-            const marker = new maplibregl.Marker({ element: el })
-                .setLngLat(startCoords)
-                .addTo(map);
-
-            // Simulation Loop variables
-            let step = 0;
-            const totalSteps = 600;
-
-            // Interpolate points smoothly to simulate driving
-            function animateVehicle() {
-                if (step >= totalSteps) step = 0;
-
-                const progress = step / totalSteps;
-                const totalSegments = routeCoordinates.length - 1;
-                const segmentProgress = progress * totalSegments;
-                const currentSegment = Math.floor(segmentProgress);
-                const t = segmentProgress - currentSegment;
-
-                if (currentSegment < totalSegments) {
-                    const p1 = routeCoordinates[currentSegment];
-                    const p2 = routeCoordinates[currentSegment + 1];
-
-                    // Interpolate coordinates
-                    const lng = p1[0] + (p2[0] - p1[0]) * t;
-                    const lat = p1[1] + (p2[1] - p1[1]) * t;
-                    const currentPos = [lng, lat];
-
-                    // Update cursor positioning
-                    marker.setLngLat(currentPos);
-
-                    // Compute bearing trajectory vector angle between node links
-                    const y = Math.sin(Math.PI * (p2[0] - p1[0]) / 180) * Math.cos(Math.PI * p2[1] / 180);
-                    const x = Math.cos(Math.PI * p1[1] / 180) * Math.sin(Math.PI * p2[1] / 180) -
-                              Math.sin(Math.PI * p1[1] / 180) * Math.cos(Math.PI * p2[1] / 180) * Math.cos(Math.PI * (p2[0] - p1[0]) / 180);
-                    let bearing = Math.atan2(y, x) * 180 / Math.PI;
-                    
-                    // Smooth tracking camera configuration lock loop
-                    map.easeTo({
-                        center: currentPos,
-                        bearing: bearing, 
-                        duration: 0,
-                        pitch: 60
+            plotRoutePolyline: function(geometry) {
+                if (this.mapInstance.getSource('active-uk-route')) {
+                    this.mapInstance.getSource('active-uk-route').setData(geometry);
+                } else {
+                    this.mapInstance.addSource('active-uk-route', { type: 'geojson', data: geometry });
+                    this.mapInstance.addLayer({
+                        id: 'route-line-layer',
+                        type: 'line',
+                        source: 'active-uk-route',
+                        paint: { 'line-color': '#00f0ff', 'line-width': 7, 'line-opacity': 0.85 }
                     });
                 }
+            },
 
-                step++;
-                requestAnimationFrame(animateVehicle);
+            populateTurnSequenceDeck: function(steps) {
+                const deck = document.getElementById('dynamic-step-sequence-list');
+                deck.innerHTML = '';
+                steps.forEach(step => {
+                    const card = document.createElement('div');
+                    card.className = 'preview-step-card';
+                    const distanceYds = Math.round(step.distance * 1.09361);
+                    card.innerHTML = `<span>${step.maneuver.instruction}</span><strong>${distanceYds > 1760 ? (distanceYds/1760).toFixed(1)+' mi' : distanceYds+' yd'}</strong>`;
+                    deck.appendChild(card);
+                });
+            },
+
+            // INTERFACE TOGGLE SUB-ENGINES
+            toggleHUDMode: function() {
+                const viewport = document.getElementById('satnav-dashboard-viewport');
+                this.state.isHUDActive = !this.state.isHUDActive;
+                if(this.state.isHUDActive) {
+                    viewport.style.transform = "scaleY(-1) rotate(180deg)";
+                    viewport.style.filter = "brightness(1.4) contrast(1.2)";
+                } else {
+                    viewport.style.transform = "none";
+                    viewport.style.filter = "none";
+                }
+            },
+
+            simulateVelocityBreach: function() {
+                this.state.simulatedSpeeding = !this.state.simulatedSpeeding;
+                const speedElement = document.getElementById('hud-current-speed');
+                const outerFrame = document.getElementById('master-satnav-frame');
+
+                if (this.state.simulatedSpeeding) {
+                    speedElement.innerText = "36";
+                    outerFrame.classList.add('uk-speed-breach-imminent');
+                } else {
+                    speedElement.innerText = "28";
+                    outerFrame.classList.remove('uk-speed-breach-imminent');
+                }
+            },
+
+            toggleJunctionSplit: function() {
+                const outerFrame = document.getElementById('master-satnav-frame');
+                this.state.isSplitActive = !this.state.isSplitActive;
+                if(this.state.isSplitActive) {
+                    outerFrame.classList.add('split-screen-junction-active');
+                    this.mapInstance.resize();
+                } else {
+                    outerFrame.classList.remove('split-screen-junction-active');
+                    this.mapInstance.resize();
+                }
+            },
+
+            registerSystemClock: function() {
+                setInterval(() => {
+                    document.getElementById('hud-live-clock').innerText = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                }, 1000);
             }
+        };
 
-            // Fire Simulation Engine Run
-            animateVehicle();
-        });
-
-        // Interactive control wiring
-        document.getElementById('tilt-btn').addEventListener('click', () => {
-            const currentPitch = map.getPitch();
-            map.easeTo({ pitch: currentPitch > 30 ? 0 : 60, duration: 800 });
-        });
-        
-        document.getElementById('recenter-btn').addEventListener('click', () => {
-            map.easeTo({ zoom: 16.5, duration: 800 });
-        });
+        // Initialize Systems on Page Launch
+        SatNavApplicationCore.init();
     </script>
 </body>
 </html>
