@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OpenNav SatNav Engine</title>
+    <!-- Leaflet Engine for crash-proof mobile mapping -->
+    <link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body, html { height: 100%; width: 100vw; overflow: hidden; background: #111; }
+        
+        #app-container { position: relative; height: 100vh; width: 100vw; display: flex; flex-direction: column; }
+        #map { flex: 1; width: 100%; height: 100%; z-index: 1; }
+
+        /* Google Maps Inspired HUD HUD & Floating Controls */
+        .hud-overlay { position: absolute; z-index: 1000; pointer-events: none; width: 100%; padding: 12px; }
+        .top-hud { top: 0; display: flex; flex-direction: column; gap: 10px; }
+        .bottom-hud { bottom: 80px; display: flex; justify-content: space-between; align-items: flex-end; }
+
+        /* Card Elements */
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 14px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); pointer-events: auto; }
+        
+        /* Route Instruction Banner */
+        .routing-banner { display: flex; align-items: center; gap: 12px; background: #00875a; color: white; width: 100%; max-width: 500px; margin: 0 auto; }
+        .routing-banner .turn-icon { font-size: 28px; font-weight: bold; }
+
+        /* Speedo Elements */
+        .speed-zone { display: flex; flex-direction: column; gap: 8px; }
+        .speed-circle { width: 55px; height: 55px; border-radius: 50%; border: 4px solid #cc0000; background: white; color: black; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .current-speed { background: #111; color: #00ff00; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; border: 1px solid #333; }
+
+        /* Mobile Bottom Sheet Tray */
+        .control-tray { position: absolute; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 1005; padding: 16px 20px 24px 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 12px; }
+        .tray-handle { width: 40px; height: 4px; background: #ccc; border-radius: 2px; margin: 0 auto 8px auto; }
+        
+        /* Interactive Inputs */
+        .input-row { display: flex; gap: 10px; width: 100%; }
+        .search-bar { flex: 1; padding: 12px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; outline: none; background: #f5f5f7; }
+        
+        /* Camera Upload Action Button */
+        .btn-camera { background: #0066cc; color: white; border: none; padding: 0 16px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .btn-camera input[type="file"] { display: none; }
+        
+        .status-text { font-size: 12px; color: #666; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- Top Navigation HUD Banner -->
+        <div class="hud-overlay top-hud">
+            <div class="glass-card routing-banner" id="nav-banner">
+                <div class="turn-icon">↑</div>
+                <div>
+                    <h3 style="font-size: 16px; margin:0;">GPS SatNav Engine Active</h3>
+                    <p style="font-size: 12px; margin:0; color: rgba(255,255,255,0.8);">Awaiting photo scan or destination entry...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Map Object Area -->
+        <div id="map"></div>
+
+        <!-- Left/Right Floating Dashboard Gauges -->
+        <div class="hud-overlay bottom-hud">
+            <div class="speed-zone">
+                <div class="speed-circle" id="speed-limit">--</div>
+                <div class="current-speed"><span id="live-speed">0</span> MPH</div>
+            </div>
+        </div>
+
+        <!-- Bottom Sheet Interactive Tray -->
+        <div class="control-tray">
+            <div class="tray-handle"></div>
+            <div class="input-row">
+                <input type="text" class="search-bar" id="target-address" placeholder="Search address or destination..." />
+                
+                <!-- Camera Trigger Element for Mobile App Capture -->
+                <label class="btn-camera">
+                    📷
+                    <input type="file" accept="image/*" capture="environment" id="photo-ocr-input">
+                </label>
+            </div>
+            <div class="status-text" id="system-status">System Standby • Click camera to snap an address photo</div>
+        </div>
+    </div>
+
+    <!-- Leaflet engine logic dependency -->
+    <script src="https://unpkg.com" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Init map looking at downtown London/UK matrix
+        const map = L.map('map', {
+            center: [51.505, -0.09],
+            zoom: 15,
+            zoomControl: false 
+        });
+
+        // Add Google-like sharp street map styling
+        L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Core Tracking Marker variables
+        let userMarker = L.marker([51.505, -0.09]).addTo(map).bindPopup("Your Vehicle").openPopup();
+        let activeRouteLine = null;
+
+        // Auto Live GPS tracking logic setup
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const speedCalculated = position.coords.speed ? Math.round(position.coords.speed * 2.23694) : 0; // Convert m/s to MPH
+                
+                document.getElementById('live-speed').textContent = speedCalculated;
+                userMarker.setLatLng([lat, lng]);
+                map.setView([lat, lng], map.getZoom());
+            }, (err) => {
+                console.log("GPS signal searching...");
+            }, { enableHighAccuracy: true });
+        }
+
+        // Camera Photo OCR Simulator logic hook
+        document.getElementById('photo-ocr-input').addEventListener('change', function(e) {
+            if(e.target.files.length === 0) return;
+            
+            document.getElementById('system-status').textContent = "Scanning image for text characters...";
+            
+            // Simulating parsing engine wait sequence
+            setTimeout(() => {
+                const mockedAddress = "10 Downing Street, London, SW1A 2AA";
+                document.getElementById('target-address').value = mockedAddress;
+                document.getElementById('system-status').textContent = "Target locked from image matrix! Routing...";
+                
+                // Simulate calculating navigation route changes
+                triggerMockNavigation([51.5033, -0.1276], mockedAddress);
+            }, 1800);
+        });
+
+        function triggerMockNavigation(targetCoords, addressName) {
+            if(activeRouteLine) map.removeLayer(activeRouteLine);
+            
+            const startLoc = userMarker.getLatLng();
+            
+            // Draw a bright blue navigation track
+            activeRouteLine = L.polyline([
+                [startLoc.lat, startLoc.lng],
+                [startLoc.lat + 0.002, startLoc.lng - 0.003],
+                [targetCoords[0], targetCoords[1]]
+            ], {color: '#0066cc', weight: 6, opacity: 0.8}).addTo(map);
+            
+            map.fitBounds(activeRouteLine.getBounds(), {padding: [50, 50]});
+            
+            // Render simulated speed limits & traffic sign HUD variations
+            document.getElementById('speed-limit').textContent = "30";
+            document.getElementById('nav-banner').style.background = "#0066cc";
+            document.getElementById('nav-banner').querySelector('p').textContent = `In 400 yards, approach roundabout heading toward ${addressName}`;
+        }
+    </script>
+</body>
+</html>
