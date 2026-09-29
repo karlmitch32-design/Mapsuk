@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — Neon 3D Driving V11</title>
+<title>MUK SATNAV 86 V14 — Neon 3D Driving V11</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#111;color:var(--ink);overflow:hidden}button,input{font:inherit}button{border:0;border-radius:10px;padding:10px 13px;font-weight:800;background:var(--nav);color:#fff}button.secondary{background:#e9ece3;color:var(--nav)}button.danger{background:#f1dfdb;color:#8d352b}
-#map{position:absolute;inset:0;z-index:1;overflow:hidden;background:#dfe7dc}.leaflet-map-pane{transform-origin:50% 50%;will-change:transform}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.8)!important}
+#map{position:absolute;inset:0;z-index:1;overflow:hidden;background:#dfe7dc}.leaflet-map-pane{transform-origin:50% 68%;will-change:transform;backface-visibility:hidden}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.8)!important}
 /* Dedicated-satnav driving UI */
 .topbar{position:absolute;z-index:1200;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(255,255,255,.96);border-radius:10px;padding:8px 11px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.6px;color:var(--nav)}.searchbox{flex:1;display:flex;gap:6px;background:rgba(255,255,255,.96);padding:5px;border-radius:10px;box-shadow:var(--shadow)}.searchbox input{flex:1;border:0;outline:0;padding:7px 9px;min-width:0}.searchbox button{padding:8px 12px}
 .drive-ui{position:absolute;z-index:1300;left:0;right:0;top:0;bottom:0;pointer-events:none;display:none}.drive-ui .instruction,.drive-ui .routebar,.drive-ui .lane-cue{display:none}.drive-ui .instruction.show,.drive-ui .routebar.show,.drive-ui .lane-cue.show{display:flex}.drive-ui>*{pointer-events:auto}
@@ -115,6 +115,7 @@ body{background:var(--neon-bg)!important}
 }
 
 </style>
+<meta name="muk-build" content="MUK SATNAV 86 Neon Low Forward V14 - 10 degree perspective + low-speed route snap">
 </head>
 <body>
 <div id="app">
@@ -255,16 +256,25 @@ function updateStats(p){
  document.getElementById('speedValue').textContent=String(speed);
  document.getElementById('limitValue').textContent=lim?lim+'':(speedLimitLabel||'—');
  document.getElementById('currentRoad').textContent=lastDisplayRoad||'Following route';
- document.getElementById('navStatus').textContent=p?.accuracy<20?'GPS strong':p?.accuracy<50?'GPS good':p?.accuracy<80?'GPS weak':'GPS searching';
+ document.getElementById('navStatus').textContent=p?._snapped?'GPS route-locked':p?.accuracy<20?'GPS strong':p?.accuracy<50?'GPS good':p?.accuracy<80?'GPS weak':'GPS searching';
  updateSpeedWarning(p?.speed||0);
 }
 function applyMapVisual(){
  const el=myMarker?.getElement?.();
  const car=el?.querySelector('.car-arrow');
  const h=northUp?0:mapHeading;
- if(car) car.style.transform=`rotate(${h}deg)`;
+ // Direction-up: the blue arrow stays visually pointed straight ahead while
+ // the map rotates underneath it. North-up keeps the arrow bearing visible.
+ if(car) car.style.transform=`rotate(${northUp?mapHeading:0}deg)`;
  const pane=map.getPane('mapPane');
- if(pane){pane.style.setProperty('--map-bearing',String(h));pane.style.setProperty('--map-rotate',(-h)+'deg');}
+ if(pane){
+   const z=-h;
+   // A deliberately mild 10° forward-driving tilt. This is not a steep 3D
+   // camera: it leaves a small amount of road behind the arrow and pushes the
+   // visual emphasis toward the road ahead.
+   pane.style.transform=`perspective(900px) rotateX(10deg) rotateZ(${z}deg)`;
+   pane.style.transformOrigin='50% 68%';
+ }
 }
 function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;applyMapVisual();}
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
@@ -274,6 +284,21 @@ function showRoadAlert(msg){const el=document.getElementById('roadAlert');el.tex
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180, x1=(a.lon-p.lon)*Math.cos(meanLat),y1=a.lat-p.lat,x2=(b.lon-p.lon)*Math.cos(meanLat),y2=b.lat-p.lat;const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(0-x1)*dx+(0-y1)*dy)/(dx*dx+dy*dy||1));const q={lat:p.lat+(y1+t*dy),lon:p.lon+(x1+t*dx)/Math.cos(meanLat)};return {d:hav(p,q),q};}
 async function roadDataCheck(p){if(Date.now()-roadRuleFetchedAt<12000)return;roadRuleFetchedAt=Date.now();try{const q=`[out:json][timeout:7];(way(around:90,${p.lat},${p.lon})[highway];node(around:120,${p.lat},${p.lon})[traffic_sign~"GB:616",i];);out tags geom;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(!r.ok)return;const j=await r.json();const noEntry=(j.elements||[]).filter(e=>e.type==='node'&&String(e.tags?.traffic_sign||'').toUpperCase().includes('GB:616'));if(noEntry.length&&p.heading!=null){for(const n of noEntry){const d=hav(p,{lat:n.lat,lon:n.lon}),b=bearing(p,{lat:n.lat,lon:n.lon});if(d<90&&angleDiff(p.heading,b)<40){showRoadAlert('⚠ NO-ENTRY SIGN AHEAD');const key='noentry-'+Math.round(n.lat*1e5)+'-'+Math.round(n.lon*1e5);if(!announced[key]){announced[key]=1;speak('Warning. No entry sign ahead.');}break;}}}let best=null;for(const w of (j.elements||[])){const g=w.geometry||[];for(let i=1;i<g.length;i++){const z=roadSegmentDistance(p,{lat:g[i-1].lat,lon:g[i-1].lon},{lat:g[i].lat,lon:g[i].lon});if(!best||z.d<best.d)best={d:z.d,tags:w.tags||{},a:g[i-1],b:g[i]};}}if(!best||best.d>45)return;const t=best.tags||{};speedLimit=parseSpeedLimit(t.maxspeed)||speedLimit;const one=t.oneway;let wrongOneWay=false;if(['yes','true','1'].includes(String(one).toLowerCase())){const rb=bearing(best.a,best.b);wrongOneWay=angleDiff(p.heading||rb,rb)>115;}else if(String(one).toLowerCase()==='-1'){const rb=bearing(best.b,best.a);wrongOneWay=angleDiff(p.heading||rb,rb)>115;}roadRuleState={wrongOneWay,road:t.name||t.ref||'',oneway:one,access:t.access||'',vehicle:t.vehicle||'',highway:t.highway||''};if(wrongOneWay){showRoadAlert('⚠ WRONG-WAY / NO-ENTRY ROAD');const key='oneway-warning';if(!announced[key]){announced[key]=1;speak('Warning. You appear to be travelling against the road direction.');}}else if(['no','private'].includes(String(t.access||'').toLowerCase())||['no','private'].includes(String(t.vehicle||'').toLowerCase())){showRoadAlert('⚠ ROAD ACCESS RESTRICTION');}else resetRoadAlert();}catch(e){}}
 async function speedLimitCheck(p){if(Date.now()-speedLimitFetchedAt<15000)return;speedLimitFetchedAt=Date.now();await roadDataCheck(p);}
+function snapNavigationPosition(p){
+  if(!routeGeo?.coordinates?.length)return p;
+  const near=nearestOnRoute(p);
+  const lowSpeed=(p.speed||0)<=2.25; // about 5 mph
+  // At low speed, GPS can wander around the carriageway/nearby buildings.
+  // When the raw fix is close to our planned route, draw the vehicle on the
+  // route itself and use the route segment for its heading.
+  if(lowSpeed && near.d<=45){
+    const snapped={...p,lat:near.point.lat,lon:near.point.lon,_snapped:true,_rawLat:p.lat,_rawLon:p.lon};
+    const rb=routeBearingAt(near.index);
+    if(rb!=null)snapped.heading=rb;
+    return snapped;
+  }
+  return p;
+}
 function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:500,timeout:12000});toast('Live navigation started'); document.getElementById('navStatus').textContent='GPS acquiring…'}
 function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();mapHeading=0;applyMapVisual();if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
 function recenter(){if(lastPos){const h=northUp?null:lastPos.heading;const c=h==null?[lastPos.lat,lastPos.lon]:lookAheadCenter(lastPos,h);map.setView(c,18.2,{animate:false});if(h!=null)setMapRotation(h)}}
@@ -293,6 +318,9 @@ async function onPosition(pos){
  lastGpsFix=Date.now(); lastValidGps=p;
  const rawHeading=Number.isFinite(c.heading)&&c.heading>=0&&p.speed>2?c.heading:(lastPos&&p.speed>2?bearing(lastPos,p):null);
  p.heading=p.speed>2?smoothHeading(lastPos?.heading,rawHeading):lastPos?.heading??null;
+ // Snap the navigation position only when it is close enough to the active
+ // route and moving slowly; never use this to hide a genuine off-route drive.
+ p=snapNavigationPosition(p);
  lastPos=p;
  if(!myMarker)myMarker=L.marker([p.lat,p.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([p.lat,p.lon]);
  if(p.heading!=null&&!northUp){
