@@ -113,13 +113,22 @@ function updateStats(p){const speed=mph(p?.speed||0), lim=speedLimit;ST.style.di
 function applyMapVisual(){
  const pane=map.getPanes()?.mapPane;
  if(!pane)return;
- const base=(pane.dataset.mukBaseTransform || '').trim();
  const active=driveMode;
  const pitch=active ? 58 : 0;
  const scale=active ? 1.42 : 1;
  const rotate=active ? -mapHeading : 0;
+ // Leaflet owns the map-pane transform; never overwrite it. Apply the driving
+ // camera as an additional visual layer so GPS panning remains stable.
  pane.style.transformOrigin='50% 68%';
- pane.style.transform=`${base} perspective(900px) rotateX(${pitch}deg) rotateZ(${rotate}deg) scale(${scale})`;
+ pane.style.perspective='900px';
+ pane.style.transformStyle='preserve-3d';
+ pane.style.filter=active ? 'none' : '';
+ const cam=map.getContainer();
+ cam.style.perspective=active ? '900px' : '';
+ cam.style.perspectiveOrigin='50% 68%';
+ pane.style.setProperty('--muk-pitch', pitch+'deg');
+ pane.style.setProperty('--muk-rotation', rotate+'deg');
+ pane.classList.toggle('muk-drive-camera',active);
  const el=myMarker?.getElement?.();
  const car=el?.querySelector('.car-arrow');
  if(car)car.style.transform=`rotate(${active ? 0 : mapHeading}deg)`;
@@ -138,9 +147,11 @@ function recenter(){if(lastPos){const c=lookAheadCenter(lastPos,lastPos.heading)
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
 async function onPosition(pos){
  const p={lat:pos.coords.latitude,lon:pos.coords.longitude};p.accuracy=pos.coords.accuracy||999;p.speed=Number.isFinite(pos.coords.speed)?Math.max(0,pos.coords.speed):0;
- const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:(lastPos?bearing(lastPos,p):null);p.heading=smoothHeading(lastPos?.heading,rawHeading);lastPos=p;
+ const previousPos=lastPos;
+ const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:(previousPos?bearing(previousPos,p):null);p.heading=smoothHeading(previousPos?.heading,rawHeading);
+ lastPos=p;
  if(!myMarker)myMarker=L.marker([p.lat,p.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([p.lat,p.lon]);
- if(p.heading!=null && (p.speed > 1.2 || lastPos?.heading!=null)){const c=lookAheadCenter(p,p.heading);map.setView(c,Math.max(16,map.getZoom()),{animate:false});setMapRotation(p.heading);}
+ if(p.heading!=null && (p.speed > 1.2 || previousPos?.heading!=null)){const c=lookAheadCenter(p,p.heading);map.setView(c,Math.max(16,map.getZoom()),{animate:false});setMapRotation(p.heading);}
  else {map.setView([p.lat,p.lon],Math.max(16,map.getZoom()),{animate:false});applyMapVisual();}
  await speedLimitCheck(p);updateStats(p);
  if(!routeSteps.length)return;await navigationEngine(p);
