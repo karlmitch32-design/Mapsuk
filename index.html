@@ -58,7 +58,7 @@
 body{background:var(--neon-bg)!important}
 #map{inset:0;width:100%;height:100%;background:var(--neon-bg)!important;box-shadow:inset 0 -140px 160px rgba(0,0,0,.52)}
 /* True driving-style visual treatment: tilt and rotate the map pane, not the whole UI. */
-.drive-active .leaflet-map-pane{transform:perspective(900px) rotateZ(var(--map-rotate, 0deg)) rotateX(56deg) scale(1.18);transform-origin:50% 78%;will-change:transform}
+.drive-active .leaflet-map-pane{transform:perspective(720px) rotateZ(var(--map-rotate, 0deg)) rotateX(74deg) scale(1.52);transform-origin:50% 92%;will-change:transform}
 .leaflet-container{background:var(--neon-bg)!important}
 .leaflet-tile-pane{filter:brightness(.58) saturate(1.45) contrast(1.18)}
 .leaflet-overlay-pane{filter:drop-shadow(0 0 7px rgba(0,240,255,.34))}
@@ -102,6 +102,7 @@ body{background:var(--neon-bg)!important}
 .drive-active .speed-warning{top:218px;background:rgba(35,8,18,.95);box-shadow:0 0 14px rgba(255,0,127,.45);border:1px solid var(--neon-pink)}
 .drive-active .lane-cue{bottom:108px;background:rgba(5,5,10,.92);color:var(--neon-cyan);border:1px solid var(--neon-cyan);box-shadow:0 0 14px rgba(0,240,255,.32)}
 @media(max-width:600px){
+ .drive-active .leaflet-map-pane{transform:perspective(680px) rotateZ(var(--map-rotate, 0deg)) rotateX(72deg) scale(1.46);transform-origin:50% 92%;}
  .drive-active .nav-top{width:92%;top:16px}
  .drive-active .instruction{width:92%;top:82px}
  .drive-active .routebar{width:92%;top:164px}
@@ -221,7 +222,7 @@ async function buildRoute(a,dest,startLive=false,rerouting=false){
  if(startLive||rerouting){
    if(initialHeading!=null&&!northUp)setMapRotation(initialHeading);
    const camHeading=northUp?null:(initialHeading??lastPos?.heading);
-   map.setView(camHeading==null?[a.lat,a.lon]:lookAheadCenter(a,camHeading),18,{animate:false});
+   map.setView(camHeading==null?[a.lat,a.lon]:lookAheadCenter(a,camHeading),18.2,{animate:false});
    if(rerouting){document.getElementById('navStatus').textContent='Route updated';}
  }else{
    map.fitBounds(routeLayer.getBounds(),{padding:[70,70]});
@@ -267,7 +268,7 @@ function applyMapVisual(){
 }
 function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;applyMapVisual();}
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
-function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=145;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
+function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=220;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');el.classList.remove('show');}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');el.textContent=msg;el.classList.add('show');}
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180, x1=(a.lon-p.lon)*Math.cos(meanLat),y1=a.lat-p.lat,x2=(b.lon-p.lon)*Math.cos(meanLat),y2=b.lat-p.lat;const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(0-x1)*dx+(0-y1)*dy)/(dx*dx+dy*dy||1));const q={lat:p.lat+(y1+t*dy),lon:p.lon+(x1+t*dx)/Math.cos(meanLat)};return {d:hav(p,q),q};}
@@ -275,7 +276,7 @@ async function roadDataCheck(p){if(Date.now()-roadRuleFetchedAt<12000)return;roa
 async function speedLimitCheck(p){if(Date.now()-speedLimitFetchedAt<15000)return;speedLimitFetchedAt=Date.now();await roadDataCheck(p);}
 function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:500,timeout:12000});toast('Live navigation started'); document.getElementById('navStatus').textContent='GPS acquiring…'}
 function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();mapHeading=0;applyMapVisual();if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
-function recenter(){if(lastPos){const h=northUp?null:lastPos.heading;const c=h==null?[lastPos.lat,lastPos.lon]:lookAheadCenter(lastPos,h);map.setView(c,18,{animate:false});if(h!=null)setMapRotation(h)}}
+function recenter(){if(lastPos){const h=northUp?null:lastPos.heading;const c=h==null?[lastPos.lat,lastPos.lon]:lookAheadCenter(lastPos,h);map.setView(c,18.2,{animate:false});if(h!=null)setMapRotation(h)}}
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
 async function onPosition(pos){
  const c=pos.coords;
@@ -296,9 +297,9 @@ async function onPosition(pos){
  if(!myMarker)myMarker=L.marker([p.lat,p.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([p.lat,p.lon]);
  if(p.heading!=null&&!northUp){
    const c2=lookAheadCenter(p,p.heading);
-   map.setView(c2,18,{animate:false});
+   map.setView(c2,18.2,{animate:false});
    setMapRotation(p.heading);
- } else {map.setView([p.lat,p.lon],18,{animate:false});applyMapVisual();}
+ } else {map.setView([p.lat,p.lon],18.2,{animate:false});applyMapVisual();}
  await speedLimitCheck(p);
  const near=nearestOnRoute(p);
  if(routeGeo?.coordinates?.length){let candidate='';for(const st of routeSteps){if(st._routeIndex!=null&&st._routeIndex<=near.index&&roadName(st))candidate=roadName(st);}if(candidate)lastDisplayRoad=candidate;}
