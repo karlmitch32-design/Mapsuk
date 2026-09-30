@@ -132,7 +132,7 @@ body{background:var(--neon-bg)!important}
   <div class="routebar" id="routebar"></div>
   <div class="nav-side"><button class="map-btn" onclick="recenter()">⌖</button><button class="map-btn" onclick="toggleNorthUp()">N</button><button class="map-btn" onclick="toggleMenu()">⋮</button></div>
   <div id="laneCue" class="lane-cue"></div>
-  <div id="speedWarning" class="speed-warning"></div><div id="roadAlert" class="road-alert"></div>
+  <div id="speedWarning" class="speed-warning"></div><div id="roadAlert" class="road-alert"></div><div id="junctionDeck" class="junction-deck"></div>
   <div class="bottom-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-main"><div class="eta-block"><b id="etaValue">--:--</b><span>arrival</span></div><div class="remain-block"><b id="remainValue">—</b><span>remaining</span></div><div class="speed-block"><b id="speedValue">0</b><span>mph</span></div><div class="limit-block"><b id="limitValue">—</b><span>limit</span></div></div>
@@ -332,7 +332,7 @@ function applyMapVisual(){
 }
 function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;applyMapVisual();}
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
-function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=220;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
+function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const mphNow=mph(p?.speed||0);const dist=mphNow<5?115:mphNow<20?150:mphNow<40?185:225;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');el.classList.remove('show');}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');el.textContent=msg;el.classList.add('show');}
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180, x1=(a.lon-p.lon)*Math.cos(meanLat),y1=a.lat-p.lat,x2=(b.lon-p.lon)*Math.cos(meanLat),y2=b.lat-p.lat;const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(0-x1)*dx+(0-y1)*dy)/(dx*dx+dy*dy||1));const q={lat:p.lat+(y1+t*dy),lon:p.lon+(x1+t*dx)/Math.cos(meanLat)};return {d:hav(p,q),q};}
@@ -353,8 +353,28 @@ function snapNavigationPosition(p){
   }
   return p;
 }
-function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:500,timeout:12000});toast('Live navigation started'); document.getElementById('navStatus').textContent='GPS acquiring…'}
-function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();mapHeading=0;applyMapVisual();if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
+function normaliseAngle(v){return ((v%360)+360)%360;}
+function fusedHeading(p,routeHead){
+  const gpsHead=Number.isFinite(p?._gpsHeading)?p._gpsHeading:null;
+  const moving=(p?.speed||0)>2;
+  if(moving && gpsHead!=null)return smoothHeading(lastPos?.heading,gpsHead);
+  if(routeHead!=null)return routeHead;
+  if(compassHeading!=null)return compassHeading;
+  return lastPos?.heading??null;
+}
+function addDeviceOrientation(){
+  if(orientationListenerAdded||!('DeviceOrientationEvent' in window))return;
+  const add=()=>{window.addEventListener('deviceorientationabsolute',onDeviceOrientation,true);window.addEventListener('deviceorientation',onDeviceOrientation,true);orientationListenerAdded=true;deviceOrientationReady=true;};
+  try{if(typeof DeviceOrientationEvent.requestPermission==='function'){DeviceOrientationEvent.requestPermission().then(v=>{if(v==='granted')add()}).catch(()=>{});}else add();}catch(e){}
+}
+function onDeviceOrientation(e){
+  let h=null;
+  if(Number.isFinite(e.webkitCompassHeading))h=e.webkitCompassHeading;
+  else if(Number.isFinite(e.alpha))h=360-e.alpha;
+  if(h!=null)compassHeading=normaliseAngle(h);
+}
+function startTracking(){if(!navigator.geolocation)return;addDeviceOrientation();if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:500,timeout:12000});toast('Live navigation started'); document.getElementById('navStatus').textContent='GPS acquiring…'}
+function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('junctionDeck')?.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();mapHeading=0;applyMapVisual();if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
 function recenter(){if(lastPos){const h=northUp?null:lastPos.heading;const c=h==null?[lastPos.lat,lastPos.lon]:lookAheadCenter(lastPos,h);map.setView(c,18.2,{animate:false});if(h!=null)setMapRotation(h)}}
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
 async function onPosition(pos){
@@ -370,8 +390,10 @@ async function onPosition(pos){
    if((p.accuracy>80&&jump>35)||(implied>55&&jump>45)){toast('GPS stabilising…');return;}
  }
  lastGpsFix=Date.now(); lastValidGps=p;
- const rawHeading=Number.isFinite(c.heading)&&c.heading>=0&&p.speed>2?c.heading:(lastPos&&p.speed>2?bearing(lastPos,p):null);
- p.heading=p.speed>2?smoothHeading(lastPos?.heading,rawHeading):lastPos?.heading??null;
+ p._gpsHeading=Number.isFinite(c.heading)&&c.heading>=0&&p.speed>2?c.heading:(lastPos&&p.speed>2?bearing(lastPos,p):null);
+ const routeNear=routeGeo?.coordinates?.length?nearestOnRoute(p):null;
+ const routeHead=routeNear&&routeNear.d<55?routeBearingAt(routeNear.index):null;
+ p.heading=fusedHeading(p,routeHead);
  // Snap the navigation position only when it is close enough to the active
  // route and moving slowly; never use this to hide a genuine off-route drive.
  p=snapNavigationPosition(p);
@@ -418,7 +440,7 @@ async function navigationEngine(p){
  // Ignore the artificial depart step for spoken/displayed manoeuvre warnings.
  if(!actionableStep(st)){renderDrive(p);return;}
  const key='warn'+stepIndex;
- const thresholds=(type==='roundabout'||type==='rotary')?[145,78,34]:[520,190,45];
+ const thresholds=(type==='roundabout'||type==='rotary')?[105,52,20]:[450,175,38];
  if(distTo<thresholds[0]&&!announced[key+'a']){
    announced[key+'a']=1;
    const txt=type==='roundabout'||type==='rotary'?`Roundabout ahead in ${formatDistance(distTo)}. ${mannerRoundabout(st)}`:`Junction ahead in ${formatDistance(distTo)}. ${manner(st)}${roadName(st)?' onto '+roadName(st):''}.`;
@@ -493,14 +515,16 @@ function renderDrive(p){
  if(!st){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
  const d=distanceToStep(p,st), t=st.maneuver?.type||'', text=maneuverLabel(st);
  // Keep the large instruction hidden until the manoeuvre is genuinely approaching.
- const visible=d<=520 || t==='arrive';
+ const visible=d<=450 || t==='arrive';
  if(!visible){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
  INS.innerHTML=`<div class="arrow">${maneuverArrow(st)}</div><div class="ins-main"><div class="big">${esc(text)}</div><div class="sub">${esc(roadName(st)||'Follow the route')}</div></div><div class="distance">${esc(formatDistance(d))}</div>`;
  INS.classList.add('show');
  RB.innerHTML=`<span class="nextroad">${esc(roadName(st)||'Next manoeuvre')}</span><span><b>${esc(formatDistance(d))}</b></span>`;
  RB.classList.add('show');
+ const jd=document.getElementById('junctionDeck');
+ if(jd){if((t==='roundabout'||t==='rotary')&&d<120){const ex=st.maneuver?.exit;const exitText=ex?ordinal(ex)+' exit':'roundabout exit';jd.innerHTML=`<div class="jd-kicker">ROUNDABOUT AHEAD</div><div class="jd-main">${esc(exitText)}</div><div class="jd-arrow">↻</div><div class="jd-dist">${esc(formatDistance(d))} · follow the marked route</div>`;jd.classList.add('show')}else if(['turn','fork','merge','on ramp','off ramp','end of road'].includes(t)&&d<90){jd.innerHTML=`<div class="jd-kicker">JUNCTION AHEAD</div><div class="jd-main">${esc(text)}</div><div class="jd-arrow">${maneuverArrow(st)}</div><div class="jd-dist">${esc(formatDistance(d))}</div>`;jd.classList.add('show')}else jd.classList.remove('show');}
  const lm=laneMarkup(st);
- if(lm&&d<350){LANE.innerHTML=lm;LANE.classList.add('show')}else LANE.classList.remove('show');
+ if(lm&&d<300){LANE.innerHTML=lm;LANE.classList.add('show')}else LANE.classList.remove('show');
 }
 function maneuverArrow(st){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
