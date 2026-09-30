@@ -24,7 +24,17 @@
 .drive-active .topbar{display:none}.drive-active .leaflet-control-attribution{opacity:.75}.route-direction{color:#fff;font-size:18px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.8);line-height:1}.route-casing{filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}.road-alert{display:none;position:absolute;z-index:1450;left:50%;transform:translateX(-50%);top:132px;background:#fff5d9;color:#6b4b00;border:2px solid #e3bd52;border-radius:12px;padding:9px 13px;box-shadow:var(--shadow);font-weight:900}.road-alert.show{display:block}
 /* V10 SAT-NAV STRUCTURE — original MUK SATNAV branding */
 .home-ui{position:absolute;z-index:1200;inset:0;pointer-events:none}.home-top{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:9px;align-items:center;pointer-events:auto}.profile-btn{width:48px;height:48px;border-radius:50%;background:#fff;color:#222;box-shadow:0 3px 14px rgba(0,0,0,.22);font-size:22px;padding:0}.home-search{height:50px;flex:1;display:flex;align-items:center;background:#fff;border-radius:26px;box-shadow:0 3px 14px rgba(0,0,0,.22);padding:0 8px 0 16px;gap:8px}.home-search span{font-size:25px;color:#59615a}.home-search input{border:0;outline:0;min-width:0;flex:1;font-size:16px;background:transparent}.home-search button{border-radius:22px;padding:9px 14px;background:#27311e}
-.drive-ui{display:none;position:absolute;z-index:1300;inset:0;pointer-events:none}.drive-active .drive-ui{display:block}.drive-ui>*{pointer-events:auto}.drive-active .home-ui{display:none}
+/* V17 interaction repair: each mode has a single clear touch owner. */
+body:not(.drive-active) #map{pointer-events:none!important}
+body:not(.drive-active) .home-ui{display:block!important;z-index:99999!important;pointer-events:auto!important}
+body:not(.drive-active) .home-ui *{pointer-events:auto!important;touch-action:manipulation}
+body:not(.drive-active) .panel,body:not(.drive-active) .menu,body:not(.drive-active) .toast{pointer-events:auto!important}
+.home-search input,.home-search button,.profile-btn{touch-action:manipulation;-webkit-user-select:text;user-select:text}
+body.drive-active #map{pointer-events:auto!important}
+body.drive-active .home-ui{pointer-events:none!important}
+body.drive-active .home-ui *{pointer-events:none!important}
+.drive-ui .panel,.drive-ui .menu,.drive-ui button{touch-action:manipulation}
+.drive-ui{display:none;position:absolute;z-index:1300;inset:0;pointer-events:none}.drive-ui>*{pointer-events:auto}.drive-active .drive-ui{display:block}.drive-active .home-ui{display:none}
 .nav-top{position:absolute;z-index:10;top:12px;left:12px;right:12px;height:62px;display:flex;align-items:center;gap:10px}.nav-back,.nav-sound{width:48px;height:48px;border-radius:50%;padding:0;background:#fff;color:#27311e;box-shadow:0 3px 14px rgba(0,0,0,.25);font-size:28px}.nav-sound{font-size:19px;margin-left:auto}.nav-destination{height:48px;min-width:0;flex:1;max-width:68%;padding:7px 14px;border-radius:24px;background:rgba(255,255,255,.96);box-shadow:0 3px 14px rgba(0,0,0,.22);overflow:hidden}.nav-destination small{display:block;font-size:8px;letter-spacing:1px;color:#73786e;font-weight:900}.nav-destination b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
 .instruction{position:absolute;z-index:12;top:84px;left:12px;right:12px;min-height:82px;margin:0;padding:9px 13px;border-radius:16px;background:rgba(255,255,255,.98);box-shadow:0 4px 18px rgba(0,0,0,.25);border-left:6px solid #27311e;display:flex;align-items:center;gap:12px}.instruction .arrow{font-size:45px;width:55px;color:#27311e}.ins-main .big{font-size:21px}.distance{font-size:23px}.routebar{position:absolute;z-index:11;top:174px;left:18px;right:18px;height:34px;margin:0;border-radius:17px;background:rgba(39,49,30,.92);padding:7px 13px;box-shadow:0 3px 12px rgba(0,0,0,.2);font-size:11px}
 .nav-side{position:absolute;z-index:13;right:12px;top:230px;display:flex;flex-direction:column;gap:9px}.map-btn{width:45px;height:45px;border-radius:50%;padding:0;background:#fff;color:#27311e;box-shadow:0 3px 14px rgba(0,0,0,.22);font-size:18px}.map-btn:first-child{font-size:24px}.map-btn:nth-child(2){font-size:14px;font-weight:950}
@@ -117,19 +127,15 @@ body{background:var(--neon-bg)!important}
 }
 
 
-/* V16.1 TOUCH / INPUT HARDENING: home controls always own the touch surface until navigation starts. */
-body:not(.drive-active) #map{pointer-events:none!important}
-body:not(.drive-active) .home-ui{display:block!important;z-index:99999!important;pointer-events:auto!important}
-body:not(.drive-active) .home-ui *{pointer-events:auto!important;touch-action:manipulation}
-body:not(.drive-active) .home-top{z-index:100000!important}
-body:not(.drive-active) .home-search input{position:relative;z-index:100002!important;pointer-events:auto!important;touch-action:manipulation}
-body:not(.drive-active) .home-search button,body:not(.drive-active) .profile-btn{position:relative;z-index:100003!important;pointer-events:auto!important;touch-action:manipulation}
-body.drive-active #map{pointer-events:auto!important}
-body.drive-active .home-ui{pointer-events:none!important}
-body.drive-active .home-ui *{pointer-events:none!important}
-.home-search input{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+/* V14 MERGE — useful cockpit telemetry and junction-deck presentation from supplied dashboard */
+#telemetryStrip{position:absolute;z-index:1350;top:0;left:0;right:0;height:34px;display:none;align-items:center;justify-content:space-between;padding:0 10px;background:linear-gradient(180deg,rgba(3,5,10,.94),rgba(3,5,10,.15));color:#b8c4d4;font-size:9px;font-weight:800;letter-spacing:.35px;pointer-events:none}
+#telemetryStrip .telemetry-group{display:flex;gap:10px;align-items:center}.telemetry-good{color:#56d364}.telemetry-cyan{color:#00f0ff}.telemetry-warn{color:#ffca28}
+#junctionDeck{position:absolute;z-index:1340;right:10px;top:300px;width:min(310px,48vw);display:none;background:rgba(5,7,12,.94);border:1px solid rgba(0,240,255,.7);border-radius:12px;padding:10px;box-shadow:0 0 18px rgba(0,240,255,.24);color:#fff;pointer-events:none}
+#junctionDeck.show{display:block}.junction-title{font-size:8px;letter-spacing:1px;color:#8a99ad;font-weight:900;margin-bottom:6px}.uk-sign{background:#005aa7;border:3px solid #fff;border-radius:6px;padding:9px;text-align:center;font-size:15px;font-weight:950;white-space:pre-line;line-height:1.12}.uk-sign.a-road{background:#00703c}.junction-lanes{display:flex;justify-content:center;gap:18px;margin-top:10px;font-size:31px;font-weight:950;color:#00f0ff;text-shadow:0 0 10px rgba(0,240,255,.65)}.junction-distance{text-align:center;margin-top:4px;font-size:9px;color:#b8c4d4;font-weight:800}
+@media(max-width:600px){#telemetryStrip{height:28px;font-size:8px}.telemetry-group{gap:6px!important}#junctionDeck{top:285px;right:8px;width:220px}.uk-sign{font-size:12px;padding:7px}.junction-lanes{font-size:25px;gap:12px}}
+.drive-active #telemetryStrip{display:flex}.drive-active #junctionDeck.show{display:block}
 </style>
-<meta name="muk-build" content="MUK SATNAV 86 Neon Forward Perspective V15 - 42 degree pitch + upright labels + low-speed route snap">
+<meta name="muk-build" content="MUK SATNAV 86 V14 - Neon Forward Driving + Cockpit Junction Deck">
 </head>
 <body>
 <div id="app">
@@ -138,6 +144,11 @@ body.drive-active .home-ui *{pointer-events:none!important}
   <div class="home-top"><button class="profile-btn" onclick="toggleMenu()">☰</button><div class="home-search"><span>⌕</span><input id="q" placeholder="Search destination or postcode"><button onclick="find()">Search</button></div></div>
 </div>
 <div id="driveUI" class="drive-ui" style="display:none">
+<div id="telemetryStrip">
+  <div class="telemetry-group"><span>GPS <b id="telGps" class="telemetry-good">SEARCHING</b></span><span>ACC <b id="telAcc">—</b></span><span>HDG <b id="telHeading" class="telemetry-cyan">—</b></span></div>
+  <div class="telemetry-group"><span id="telClock" class="telemetry-cyan">--:--</span><span class="telemetry-warn">UK MODE</span></div>
+</div>
+<div id="junctionDeck"><div class="junction-title">JUNCTION / ROAD SIGN PREVIEW</div><div id="junctionSign" class="uk-sign">NEXT MANOEUVRE</div><div id="junctionLanes" class="junction-lanes">↑</div><div id="junctionDistance" class="junction-distance">Approaching</div></div>
   <div class="nav-top"><button class="nav-back" onclick="stopNavigation()">‹</button><div class="nav-destination"><small>DESTINATION</small><b id="navDest">Navigation</b></div><button class="nav-sound" onclick="toggleVoice()">🔊</button></div>
   <div id="instruction" class="instruction"></div>
   <div class="routebar" id="routebar"></div>
@@ -154,43 +165,28 @@ body.drive-active .home-ui *{pointer-events:none!important}
 <div id="toast" class="toast"></div>
 <div id="menu" class="menu"></div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-// Defensive mobile click/touch bindings. These do not replace the existing handlers; they ensure the home UI receives input.
-document.addEventListener('DOMContentLoaded',()=>{
-  setHomeInteraction(!driveMode);
-  const input=document.getElementById('q');
-  const searchBtn=document.querySelector('.home-search button');
-  if(input){input.addEventListener('touchstart',()=>input.focus(),{passive:true});input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();find();}});}
-  if(searchBtn)searchBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();find();});
-});
-</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const map=L.map('map',{zoomControl:false}).setView([54.5,-3.4],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors',crossOrigin:true}).addTo(map);
 setTimeout(()=>map.invalidateSize(false),100);
-let northUp=false, lastDisplayRoad='', lastGpsFix=0, lastValidGps=null;
+let northUp=false, lastDisplayRoad='', lastGpsFix=0, lastValidGps=null, lastGpsAccuracy=null, junctionVisible=false;
 let routeLayer=null,myMarker=null,destMarker=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},trafficCache=[],trafficFetchedAt=0,heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0;
 const P=document.getElementById('panel'),UI=document.getElementById('driveUI'),INS=document.getElementById('instruction'),RB=document.getElementById('routebar'),ST=document.getElementById('stats'),TOAST=document.getElementById('toast'),MENU=document.getElementById('menu'),LANE=document.getElementById('laneCue');
+const TELGPS=document.getElementById('telGps'), TELACC=document.getElementById('telAcc'), TELHDG=document.getElementById('telHeading'), TELCLOCK=document.getElementById('telClock'), JDECK=document.getElementById('junctionDeck'), JSIGN=document.getElementById('junctionSign'), JLANES=document.getElementById('junctionLanes'), JDIST=document.getElementById('junctionDistance');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();find();}});
+document.getElementById('q').document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();find();}});
+document.getElementById('panel').addEventListener('click',handlePanelAction);
+document.getElementById('panel').addEventListener('click',e=>{const b=e.target.closest('button[data-start-action="go"]');if(b){e.preventDefault();e.stopPropagation();manualRoute()}});
+document.getElementById('panel').addEventListener('keydown',e=>{if(e.target.id==='start'&&e.key==='Enter'){e.preventDefault();manualRoute()}});
 window.addEventListener('resize',()=>map.invalidateSize(false));
 setTimeout(()=>map.invalidateSize(false),250);
-function setHomeInteraction(active=true){
-  document.body.classList.toggle('drive-active',!active);
-  const home=document.querySelector('.home-ui');
-  const mapEl=document.getElementById('map');
-  if(home){home.style.zIndex=active?'99999':'1';home.style.pointerEvents=active?'auto':'none';}
-  if(mapEl)mapEl.style.pointerEvents=active?'none':'auto';
-}
-setHomeInteraction(true);
-const qInput=document.getElementById('q');
-if(qInput){qInput.disabled=false;qInput.readOnly=false;qInput.tabIndex=0;qInput.addEventListener('click',e=>e.stopPropagation());qInput.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});}
 const saved=()=>JSON.parse(localStorage.getItem('muk86.saved')||'[]'); const save=a=>localStorage.setItem('muk86.saved',JSON.stringify(a));
 function show(x){P.innerHTML=x;P.classList.add('show')} function hide(){P.classList.remove('show')}
 function toast(x){TOAST.textContent=x;TOAST.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>TOAST.classList.remove('show'),3000)}
 function toggleVoice(){voiceOn=!voiceOn;toast(voiceOn?'Voice navigation on':'Voice navigation off');if(voiceOn&&lastPos)speak('Voice navigation on')}
 function toggleNorthUp(){northUp=!northUp;if(northUp){setMapRotation(0);toast('North up')}else if(lastPos?.heading!=null){setMapRotation(lastPos.heading);toast('Direction up')}}
-function toggleMenu(){if(!driveMode)setHomeInteraction(true);MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</button><button onclick="toggleNorthUp();toggleMenu()">${northUp?'🧭 North up':'🧭 Direction up'}</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
+function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</button><button onclick="toggleNorthUp();toggleMenu()">${northUp?'🧭 North up':'🧭 Direction up'}</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
 function formatDistance(m){if(m<1000)return Math.max(5,Math.round(m/5)*5)+' yd';return (m/1609.344).toFixed(m<16093?1:0)+' mi'}
 function speak(t){if(!voiceOn||!('speechSynthesis'in window)||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.96;u.pitch=1;speechSynthesis.speak(u)}catch(e){}}
 function bearing(a,b){const r=Math.PI/180,la=a.lat*r,lb=b.lat*r,dl=(b.lon-a.lon)*r;return (Math.atan2(Math.sin(dl)*Math.cos(lb),Math.cos(la)*Math.sin(lb)-Math.sin(la)*Math.cos(lb)*Math.cos(dl))*180/Math.PI+360)%360}
@@ -217,17 +213,26 @@ function maneuverLabel(st){const m=st?.maneuver||{};const t=m.type||'';const mod
 function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
 function stepDistance(st){return Math.max(0,st?st._distance||st.distance||0:0)}
 function roadName(st){return st?.name||st?.ref||''}
-async function geo(q){const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=6&q='+encodeURIComponent(q));if(!r.ok)throw Error('Search service unavailable');return r.json()}
-async function find(){const q=document.getElementById('q').value.trim();if(!q)return;show('<b>Searching…</b>');try{const d=await geo(q);if(!d.length){show('<b>No UK result found</b><div class="small">Try a full address or postcode.</div>');return}show(d.map(x=>`<div class="item"><b>${esc(x.display_name.split(',')[0])}</b><div class="small">${esc(x.display_name)}</div><div class="actions"><button onclick='selectPlace(${JSON.stringify(x)})'>Select</button><button class="secondary" onclick='routeTo(${JSON.stringify(x)})'>Route</button></div></div>`).join(''))}catch(e){show('<b>Search error</b><div class="small">'+esc(e.message)+'</div>')}}
-function selectPlace(x){current={lat:+x.lat,lon:+x.lon,name:x.display_name};map.setView([current.lat,current.lon],17);if(destMarker)map.removeLayer(destMarker);destMarker=L.marker([current.lat,current.lon]).addTo(map);show(`<b>${esc(current.name.split(',')[0])}</b><div class="small">${esc(current.name)}</div><div class="actions"><button onclick='routeTo(${JSON.stringify(current)})'>🚗 Route here</button><button class="secondary" onclick='savePlace(${JSON.stringify(current)})'>Save</button></div>`)}
-function savePlace(p){let a=saved();if(!a.some(x=>hav(x,p)<15))a.push({...p,id:Date.now()});save(a);toast('Place saved');}
-function showSaved(){const a=saved();show('<b>Saved places</b>'+ (a.length?a.map(x=>`<div class="item"><b>${esc(x.name.split(',')[0])}</b><div class="small">${esc(x.name)}</div><div class="actions"><button onclick='routeTo(${JSON.stringify(x)})'>Route</button><button class="danger" onclick='deleteSaved(${x.id})'>Delete</button></div></div>`).join(''):'<div class="small">Nothing saved yet.</div>'))}
+async function geo(q){return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=6&q='+encodeURIComponent(q)).then(r=>{if(!r.ok)throw Error('Search service unavailable');return r.json()})}
+
+let searchPlaces=[];
+function placeData(p){return {lat:+p.lat,lon:+p.lon,name:p.name||p.display_name||'Destination'};}
+function renderPlaceResults(list){
+ searchPlaces=list.map(placeData);
+ show(searchPlaces.map((p,i)=>`<div class="item"><b>${esc(p.name.split(',')[0])}</b><div class="small">${esc(p.name)}</div><div class="actions"><button type="button" data-place-action="select" data-place-index="${i}">Select</button><button type="button" class="secondary" data-place-action="route" data-place-index="${i}">Route &amp; Navigate</button></div></div>`).join(''));
+}
+async function find(){const q=document.getElementById('q').value.trim();if(!q)return;show('<b>Searching…</b>');try{const d=await geo(q);if(!d.length){show('<b>No UK result found</b><div class="small">Try a full address or postcode.</div>');return}renderPlaceResults(d)}catch(e){show('<b>Search error</b><div class="small">'+esc(e.message)+'</div>')}}
+function selectPlace(x){current=placeData(x);map.setView([current.lat,current.lon],17);if(destMarker)map.removeLayer(destMarker);destMarker=L.marker([current.lat,current.lon]).addTo(map);searchPlaces=[current];show(`<b>${esc(current.name.split(',')[0])}</b><div class="small">${esc(current.name)}</div><div class="actions"><button type="button" data-place-action="route" data-place-index="0">🚗 Route &amp; Navigate</button><button type="button" class="secondary" data-place-action="save" data-place-index="0">Save</button></div>`)}
+function savePlace(p){let a=saved();if(!a.some(x=>hav(x,p)<15))a.push({...placeData(p),id:Date.now()});save(a);toast('Place saved');}
+function showSaved(){const a=saved();searchPlaces=a.map(placeData);show('<b>Saved places</b>'+ (a.length?a.map((x,i)=>`<div class="item"><b>${esc(x.name.split(',')[0])}</b><div class="small">${esc(x.name)}</div><div class="actions"><button type="button" data-place-action="route" data-place-index="${i}">Route &amp; Navigate</button><button type="button" class="danger" data-place-action="delete" data-place-index="${i}">Delete</button></div></div>`).join(''):'<div class="small">Nothing saved yet.</div>'))}
 function deleteSaved(id){save(saved().filter(x=>x.id!==id));showSaved()}
+function handlePanelAction(ev){const b=ev.target.closest('button[data-place-action]');if(!b)return;ev.preventDefault();ev.stopPropagation();const i=Number(b.dataset.placeIndex);const action=b.dataset.placeAction;const p=searchPlaces[i];if(action==='delete'){if(p?.id)deleteSaved(p.id);return}if(!p)return;if(action==='select')selectPlace(p);else if(action==='save')savePlace(p);else if(action==='route')routeTo(p);}
+
 function newRoute(){current=null;hide();document.getElementById('q').focus()}
-function routeTo(p){current={lat:+p.lat,lon:+p.lon,name:p.name||p.display_name};useLocationForRoute()}
-function useLocationForRoute(){if(!navigator.geolocation){manualStart();return}show('<b>Getting your location…</b><div class="small">High-accuracy GPS is required for live navigation.</div>');navigator.geolocation.getCurrentPosition(async pos=>{try{await buildRoute({lat:pos.coords.latitude,lon:pos.coords.longitude},current,true)}catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}},()=>manualStart(),{enableHighAccuracy:true,maximumAge:0,timeout:15000})}
-function manualStart(){show(`<b>Starting point</b><div class="searchbox" style="box-shadow:none;border:1px solid #ddd;margin-top:8px"><input id="start" placeholder="Start postcode or address"><button onclick="manualRoute()">Go</button></div>`)}
-async function manualRoute(){const q=document.getElementById('start').value.trim();if(!q)return;try{const d=await geo(q);if(!d.length)throw Error('Starting point not found');await buildRoute({lat:+d[0].lat,lon:+d[0].lon},current,true)}catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}}
+function routeTo(p){const q=placeData(p);if(!Number.isFinite(q.lat)||!Number.isFinite(q.lon)){toast('Destination coordinates are invalid');return}current=q;useLocationForRoute()}
+function useLocationForRoute(){if(!current){toast('Choose a destination first');return}if(!navigator.geolocation){manualStart();return}show('<b>Getting your location…</b><div class="small">High-accuracy GPS is required for live navigation.</div>');navigator.geolocation.getCurrentPosition(async pos=>{try{await buildRoute({lat:pos.coords.latitude,lon:pos.coords.longitude},current,true)}catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}},()=>manualStart(),{enableHighAccuracy:true,maximumAge:5000,timeout:15000})}
+function manualStart(){show(`<b>Starting point</b><div class="small">Enter a postcode or address, then press Go or Enter.</div><div class="searchbox" style="box-shadow:none;border:1px solid #ddd;margin-top:8px"><input id="start" autocomplete="street-address" placeholder="Start postcode or address"><button type="button" data-start-action="go">Go</button></div>`);setTimeout(()=>document.getElementById('start')?.focus(),50)}
+async function manualRoute(){const el=document.getElementById('start');const q=el?.value.trim();if(!q){el?.focus();return}try{show('<b>Finding starting point…</b>');const d=await geo(q);if(!d.length)throw Error('Starting point not found');await buildRoute({lat:+d[0].lat,lon:+d[0].lon},current,true)}catch(e){show('<b>Route error</b><div class="small">'+esc(e.message)+'</div>')}}
 function makeGraphicalRoute(geo){
  const group=L.featureGroup();
  L.geoJSON(geo,{style:{color:'#001d2a',weight:14,opacity:.92,lineCap:'round',lineJoin:'round',className:'route-casing'}}).addTo(group);
@@ -236,7 +241,7 @@ function makeGraphicalRoute(geo){
 }
 
 async function buildRoute(a,dest,startLive=false,rerouting=false){
- const u=`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson&steps=true&annotations=true`;
+ const u=`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson&steps=true&annotations=true&alternatives=false`;
  const r=await fetch(u);if(!r.ok)throw Error('Routing service unavailable');
  const j=await r.json();if(j.code!=='Ok')throw Error('No driving route found');
  const rt=j.routes[0];routeMeta={distance:rt.distance,duration:rt.duration};routeGeo=rt.geometry;
@@ -246,7 +251,7 @@ async function buildRoute(a,dest,startLive=false,rerouting=false){
  if(destMarker)destMarker.setLatLng([dest.lat,dest.lon]);else destMarker=L.marker([dest.lat,dest.lon]).addTo(map);
  if(startLive||rerouting){if(destMarker&&map.hasLayer(destMarker))map.removeLayer(destMarker);}
  if(!myMarker)myMarker=L.marker([a.lat,a.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([a.lat,a.lon]);
- driveMode=true;document.body.classList.add('drive-active');setHomeInteraction(false);UI.style.display='block';
+ driveMode=true;document.body.classList.add('drive-active');UI.style.display='block';
  resetNavigationState();
  document.getElementById('navDest').textContent=(current?.name||'Navigation').split(',')[0];
  hide();
@@ -333,8 +338,38 @@ function snapNavigationPosition(p){
   }
   return p;
 }
+
+setInterval(()=>{if(TELCLOCK)TELCLOCK.textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});},1000);
+function updateTelemetry(p){
+ if(!p)return;
+ lastGpsAccuracy=p.accuracy||null;
+ if(TELACC)TELACC.textContent=Number.isFinite(p.accuracy)?Math.round(p.accuracy)+'m':'—';
+ if(TELHDG)TELHDG.textContent=p.heading!=null?Math.round(p.heading)+'°':'—';
+ if(TELGPS){const a=p.accuracy||999;TELGPS.textContent=a<20?'STRONG':a<50?'GOOD':a<90?'WEAK':'SEARCHING';TELGPS.className=a<50?'telemetry-good':a<90?'telemetry-warn':'telemetry-cyan';}
+}
+function renderJunctionDeck(p,st,d){
+ if(!JDECK||!st)return;
+ const t=st.maneuver?.type||'', m=st.maneuver?.modifier||'';
+ const isJunction=['roundabout','rotary','fork','merge','on ramp','off ramp'].includes(t);
+ const near=d<=360;
+ if(!isJunction||!near){JDECK.classList.remove('show');junctionVisible=false;return;}
+ let title=maneuverLabel(st), road=roadName(st)||'';
+ let sign=title+(road?'\\n'+road:'');
+ JSIGN.textContent=sign;
+ JSIGN.classList.toggle('a-road',/A\\d+/i.test(road)&&!/M\\d+/i.test(road));
+ let arrows='↑';
+ const lanes=st?.intersections?.[0]?.lanes;
+ if(Array.isArray(lanes)){
+   const valid=lanes.filter(l=>l?.valid);
+   if(valid.length) arrows=valid.map(l=>{const a=l.indications||[];return a.includes('straight')?'↑':a.includes('slight right')?'↗':a.includes('right')?'→':a.includes('slight left')?'↖':a.includes('left')?'←':'↑'}).join(' ');
+ }
+ if(t==='roundabout'||t==='rotary') arrows='↻  '+(st.maneuver?.exit?ordinal(st.maneuver.exit)+' EXIT':'↻');
+ JLANES.textContent=arrows;JDIST.textContent=(t==='roundabout'||t==='rotary'?'Roundabout':'Junction')+' in '+formatDistance(d);
+ JDECK.classList.add('show');junctionVisible=true;
+}
+
 function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:500,timeout:12000});toast('Live navigation started'); document.getElementById('navStatus').textContent='GPS acquiring…'}
-function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');setHomeInteraction(true);UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();mapHeading=0;applyMapVisual();if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
+function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');JDECK.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();mapHeading=0;applyMapVisual();if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
 function recenter(){if(lastPos){const h=northUp?null:lastPos.heading;const c=h==null?[lastPos.lat,lastPos.lon]:lookAheadCenter(lastPos,h);map.setView(c,18.2,{animate:false});if(h!=null)setMapRotation(h)}}
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
 async function onPosition(pos){
@@ -356,6 +391,7 @@ async function onPosition(pos){
  // route and moving slowly; never use this to hide a genuine off-route drive.
  p=snapNavigationPosition(p);
  lastPos=p;
+ updateTelemetry(p);
  if(!myMarker)myMarker=L.marker([p.lat,p.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([p.lat,p.lon]);
  if(p.heading!=null&&!northUp){
    const c2=lookAheadCenter(p,p.heading);
@@ -481,6 +517,7 @@ function renderDrive(p){
  RB.classList.add('show');
  const lm=laneMarkup(st);
  if(lm&&d<350){LANE.innerHTML=lm;LANE.classList.add('show')}else LANE.classList.remove('show');
+ renderJunctionDeck(p,st,d);
 }
 function maneuverArrow(st){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
@@ -494,14 +531,9 @@ function maneuverArrow(st){
 }
 
 
-// Defensive mobile click/touch bindings. These do not replace the existing handlers; they ensure the home UI receives input.
-document.addEventListener('DOMContentLoaded',()=>{
-  setHomeInteraction(!driveMode);
-  const input=document.getElementById('q');
-  const searchBtn=document.querySelector('.home-search button');
-  if(input){input.addEventListener('touchstart',()=>input.focus(),{passive:true});input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();find();}});}
-  if(searchBtn)searchBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();find();});
-});
+// V17 interaction state: home owns touches until a route is actually started.
+function setHomeInteraction(active){document.body.classList.toggle('drive-active',!active);document.getElementById('map').style.pointerEvents=active?'none':'auto';document.querySelector('.home-ui').style.pointerEvents=active?'auto':'none';}
+setHomeInteraction(true);
 </script>
 </body>
 </html>
