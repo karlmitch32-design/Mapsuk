@@ -58,7 +58,7 @@
 body{background:var(--neon-bg)!important}
 #map{inset:0;width:100%;height:100%;background:var(--neon-bg)!important;box-shadow:inset 0 -140px 160px rgba(0,0,0,.52)}
 /* True driving-style visual treatment: tilt and rotate the map pane, not the whole UI. */
-.drive-active .leaflet-map-pane{transform:perspective(720px) rotateZ(var(--map-rotate, 0deg)) rotateX(74deg) scale(1.52);transform-origin:50% 92%;will-change:transform}
+
 .leaflet-container{background:var(--neon-bg)!important}
 .leaflet-tile-pane{filter:brightness(.58) saturate(1.45) contrast(1.18)}
 .leaflet-overlay-pane{filter:drop-shadow(0 0 7px rgba(0,240,255,.34))}
@@ -102,7 +102,7 @@ body{background:var(--neon-bg)!important}
 .drive-active .speed-warning{top:218px;background:rgba(35,8,18,.95);box-shadow:0 0 14px rgba(255,0,127,.45);border:1px solid var(--neon-pink)}
 .drive-active .lane-cue{bottom:108px;background:rgba(5,5,10,.92);color:var(--neon-cyan);border:1px solid var(--neon-cyan);box-shadow:0 0 14px rgba(0,240,255,.32)}
 @media(max-width:600px){
- .drive-active .leaflet-map-pane{transform:perspective(820px) rotateX(62deg) rotateZ(var(--map-rotate, 0deg)) scale(1.46);transform-origin:50% 92%;}
+ 
 .drive-active .leaflet-marker-icon,.drive-active .leaflet-tooltip,.drive-active .leaflet-popup,.drive-active .route-direction{transform:rotateX(-62deg) rotateZ(var(--label-counter-rotate,0deg))!important;transform-origin:50% 50%;}
 .drive-active .leaflet-control-attribution,.drive-active .leaflet-control{transform:none!important;}
  .drive-active .nav-top{width:92%;top:16px}
@@ -122,7 +122,7 @@ body{background:var(--neon-bg)!important}
 .drive-active #map{background:#e8ece7!important;box-shadow:none}
 .drive-active .leaflet-tile-pane{filter:brightness(1.03) saturate(.82) contrast(1.02)!important}
 .drive-active .leaflet-overlay-pane{filter:drop-shadow(0 2px 3px rgba(0,0,0,.22))!important}
-.drive-active .leaflet-map-pane{transform:perspective(900px) rotateX(58deg) rotateZ(var(--map-rotate,0deg)) scale(1.42)!important;transform-origin:50% 91%!important}
+
 .drive-active .leaflet-marker-icon{transform:rotateX(-58deg) rotateZ(var(--label-counter-rotate,0deg))!important;transform-origin:50% 50%}
 .drive-active .nav-top{top:10px!important;left:10px!important;right:10px!important;width:auto!important;max-width:none!important;transform:none!important;pointer-events:none}
 .drive-active .nav-back,.drive-active .nav-sound{pointer-events:auto;width:44px;height:44px;background:var(--m19-white);color:var(--m19-green);border:0;box-shadow:0 3px 15px rgba(0,0,0,.22)}
@@ -138,13 +138,13 @@ body{background:var(--neon-bg)!important}
 .drive-active .road-alert,.drive-active .speed-warning{top:192px;background:var(--m19-white);color:#4d3b00;border:2px solid #d8b64f;box-shadow:0 3px 14px rgba(0,0,0,.2)}
 .drive-active .muk-car .car-arrow{color:#1976d2!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))!important;text-shadow:none!important}
 .drive-active .leaflet-overlay-pane path{stroke:#2878e8!important}.route-casing{filter:drop-shadow(0 2px 3px rgba(0,0,0,.22))!important}
-@media(max-width:600px){.drive-active .leaflet-map-pane{transform:perspective(900px) rotateX(58deg) rotateZ(var(--map-rotate,0deg)) scale(1.42)!important}.drive-active .nav-top{top:10px!important}.drive-active .instruction{top:70px!important}.drive-active .routebar{top:153px!important}.drive-active .bottom-sheet{bottom:9px!important}.drive-active .sheet-main b{font-size:16px}.drive-active .eta-block b{font-size:20px}}
+@media(max-width:600px){.drive-active .nav-top{top:10px!important}.drive-active .instruction{top:70px!important}.drive-active .routebar{top:153px!important}.drive-active .bottom-sheet{bottom:9px!important}.drive-active .sheet-main b{font-size:16px}.drive-active .eta-block b{font-size:20px}}
 /* V19: complex junction mode enlarges the manoeuvre cue only near the decision point */
 .drive-active.complex-junction .instruction{min-height:104px;top:64px!important;border-left-width:8px}
 .drive-active.complex-junction .instruction .arrow{font-size:58px;width:70px}
 .drive-active.complex-junction .instruction .big{font-size:25px}
 </style>
-<meta name="muk-build" content="MUK SATNAV 86 V19 - Clean road-level driving structure, heading fusion, dynamic manoeuvre UI">
+<meta name="muk-build" content="MUK SATNAV 86 V21 - True forward driving camera with route alignment">
 </head>
 <body>
 <div id="app">
@@ -247,7 +247,7 @@ async function manualRoute(){const q=document.getElementById('start').value.trim
 function makeGraphicalRoute(geo){
  const group=L.featureGroup();
  L.geoJSON(geo,{style:{color:'#001d2a',weight:14,opacity:.92,lineCap:'round',lineJoin:'round',className:'route-casing'}}).addTo(group);
- L.geoJSON(geo,{style:{color:'#00f0ff',weight:5,opacity:.98,lineCap:'round',lineJoin:'round'}}).addTo(group);
+ L.geoJSON(geo,{style:{color:'#00f0ff',weight:6,opacity:.98,lineCap:'round',lineJoin:'round'}}).addTo(group);
  return group;
 }
 
@@ -332,7 +332,10 @@ function applyMapVisual(){
  }
  const pane=map.getPane('mapPane');
  if(pane){
-   // Do not apply a second pitch here; Leaflet owns this transform.
+   // V21: never pitch/rotate Leaflet's mapPane. The outer #map camera owns the
+   // perspective, so route geometry, road tiles and the vehicle stay in one
+   // coordinate system and cannot visually drift apart.
+   pane.style.transform='';
    pane.style.transformOrigin='50% 92%';
    const counter=`${h}deg`;
    document.querySelectorAll('.leaflet-marker-icon,.leaflet-tooltip,.leaflet-popup,.route-direction').forEach(node=>node.style.setProperty('--label-counter-rotate',counter));
