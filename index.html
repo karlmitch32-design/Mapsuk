@@ -148,7 +148,7 @@ const map=L.map('map',{zoomControl:false}).setView([54.5,-3.4],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors',crossOrigin:true}).addTo(map);
 setTimeout(()=>map.invalidateSize(false),100);
 let northUp=false, lastDisplayRoad='', lastGpsFix=0, lastValidGps=null;
-let compassHeading=null, compassListening=false, orientationListenerAdded=false;
+let compassHeading=null, compassListening=false;
 let routeLayer=null,myMarker=null,destMarker=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},trafficCache=[],trafficFetchedAt=0,heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0;
 const P=document.getElementById('panel'),UI=document.getElementById('driveUI'),INS=document.getElementById('instruction'),RB=document.getElementById('routebar'),ST=document.getElementById('stats'),TOAST=document.getElementById('toast'),MENU=document.getElementById('menu'),LANE=document.getElementById('laneCue');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -161,15 +161,16 @@ setTimeout(()=>map.invalidateSize(false),250);
 // V16.1: hard-reset the inactive navigation layer so it can never intercept home-screen taps.
 UI.style.display='none';
 document.body.classList.remove('drive-active');
+window.__muk86HeadingFusionReady=true;
 function startCompassFallback(){
-  if(compassListening || orientationListenerAdded || !window.DeviceOrientationEvent)return;
+  if(compassListening || !window.DeviceOrientationEvent)return;
   const handler=e=>{
     let h=null;
     if(Number.isFinite(e.webkitCompassHeading)) h=e.webkitCompassHeading;
     else if(Number.isFinite(e.alpha)) h=(360-e.alpha)%360;
     if(Number.isFinite(h)) compassHeading=(h+360)%360;
   };
-  try{window.addEventListener('deviceorientationabsolute',handler,true);window.addEventListener('deviceorientation',handler,true);compassListening=true;orientationListenerAdded=true;}catch(e){orientationListenerAdded=false;}
+  try{window.addEventListener('deviceorientationabsolute',handler,true);window.addEventListener('deviceorientation',handler,true);compassListening=true;}catch(e){compassListening=false;}
 }
 startCompassFallback();
 
