@@ -8,7 +8,7 @@
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#111;color:var(--ink);overflow:hidden}button,input{font:inherit}button{border:0;border-radius:10px;padding:10px 13px;font-weight:800;background:var(--nav);color:#fff}button.secondary{background:#e9ece3;color:var(--nav)}button.danger{background:#f1dfdb;color:#8d352b}
-#map{position:absolute;inset:0;z-index:1;overflow:hidden;background:#dfe7dc}.leaflet-map-pane{transform-origin:50% 68%;will-change:transform;backface-visibility:hidden}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.8)!important}
+#map{position:absolute;inset:0;z-index:1;overflow:hidden;background:#dfe7dc;transform-origin:50% 92%;will-change:transform;backface-visibility:hidden}/* V20: pitch the entire Leaflet viewport, not mapPane. Leaflet rewrites mapPane transforms during setView(), which can cancel a perspective effect. */.leaflet-map-pane{transform-origin:50% 92%;will-change:transform;backface-visibility:hidden}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.8)!important}
 /* Dedicated-satnav driving UI */
 .topbar{position:absolute;z-index:1200;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(255,255,255,.96);border-radius:10px;padding:8px 11px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.6px;color:var(--nav)}.searchbox{flex:1;display:flex;gap:6px;background:rgba(255,255,255,.96);padding:5px;border-radius:10px;box-shadow:var(--shadow)}.searchbox input{flex:1;border:0;outline:0;padding:7px 9px;min-width:0}.searchbox button{padding:8px 12px}
 .drive-ui{position:absolute;z-index:1300;left:0;right:0;top:0;bottom:0;pointer-events:none;display:none}.drive-ui .instruction,.drive-ui .routebar,.drive-ui .lane-cue{display:none}.drive-ui .instruction.show,.drive-ui .routebar.show,.drive-ui .lane-cue.show{display:flex}.drive-ui>*{pointer-events:auto}
@@ -309,18 +309,30 @@ function updateStats(p){
  updateSpeedWarning(p?.speed||0);
 }
 function applyMapVisual(){
+ const mapRoot=document.getElementById('map');
  const el=myMarker?.getElement?.();
  const car=el?.querySelector('.car-arrow');
  const h=northUp?0:mapHeading;
- // Direction-up: the blue arrow stays visually pointed straight ahead while
- // the map rotates underneath it. North-up keeps the arrow bearing visible.
- if(car){ car.style.transform=`rotateX(-62deg) rotateZ(${mapHeading}deg)`; car.style.transformOrigin='50% 50%'; }
+ // V20 TRUE FORWARD CAMERA: apply perspective to the stable #map viewport.
+ // Leaflet continually rewrites mapPane transforms when setView() runs, so pitching
+ // mapPane itself is unreliable. The outer map viewport remains under our control.
+ if(mapRoot){
+   if(northUp){
+     mapRoot.style.transform='none';
+   }else{
+     mapRoot.style.transform=`perspective(900px) rotateX(58deg) rotateZ(${-h}deg) scale(1.62)`;
+     mapRoot.style.transformOrigin='50% 92%';
+   }
+ }
+ // The vehicle arrow is deliberately counter-pitched so it remains readable and
+ // visually sits on the road rather than lying flat with the map.
+ if(car){
+   car.style.transform=`rotateX(-58deg) rotateZ(${h}deg)`;
+   car.style.transformOrigin='50% 50%';
+ }
  const pane=map.getPane('mapPane');
  if(pane){
-   const z=-h;
-   // Stronger forward-driving pitch: the map leans away from the driver
-   // while the heading-up rotation keeps the road aligned with travel.
-   pane.style.transform=`perspective(820px) rotateX(62deg) rotateZ(${z}deg) scale(1.46)`;
+   // Do not apply a second pitch here; Leaflet owns this transform.
    pane.style.transformOrigin='50% 92%';
    const counter=`${h}deg`;
    document.querySelectorAll('.leaflet-marker-icon,.leaflet-tooltip,.leaflet-popup,.route-direction').forEach(node=>node.style.setProperty('--label-counter-rotate',counter));
@@ -328,7 +340,7 @@ function applyMapVisual(){
 }
 function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;applyMapVisual();}
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
-function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=330;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
+function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=250;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');el.classList.remove('show');}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');el.textContent=msg;el.classList.add('show');}
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180, x1=(a.lon-p.lon)*Math.cos(meanLat),y1=a.lat-p.lat,x2=(b.lon-p.lon)*Math.cos(meanLat),y2=b.lat-p.lat;const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(0-x1)*dx+(0-y1)*dy)/(dx*dx+dy*dy||1));const q={lat:p.lat+(y1+t*dy),lon:p.lon+(x1+t*dx)/Math.cos(meanLat)};return {d:hav(p,q),q};}
