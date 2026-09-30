@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — Free UK navigation V5</title>
+<title>MUK SATNAV 86 — Commercial Forward Neon V23</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#111;color:var(--ink);overflow:hidden}button,input{font:inherit}button{border:0;border-radius:10px;padding:10px 13px;font-weight:800;background:var(--nav);color:#fff}button.secondary{background:#e9ece3;color:var(--nav)}button.danger{background:#f1dfdb;color:#8d352b}
-#mapViewport{position:absolute;left:-32%;top:-32%;width:164%;height:164%;z-index:1;overflow:hidden;transform-origin:50% 50%;will-change:transform;transition:transform .18s linear;background:#dfe7dc}#map{position:absolute;inset:0;z-index:1;overflow:hidden;background:#dfe7dc}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.8)!important}
+#mapViewport{position:absolute;left:-60%;top:-60%;width:220%;height:220%;z-index:1;overflow:hidden;transform-origin:50% 50%;will-change:transform;transition:transform .12s linear;background:#dfe7dc}#map{position:absolute;inset:0;z-index:1;overflow:hidden;background:#dfe7dc}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.8)!important}
 /* Dedicated-satnav driving UI */
 .topbar{position:absolute;z-index:1200;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(255,255,255,.96);border-radius:10px;padding:8px 11px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.6px;color:var(--nav)}.searchbox{flex:1;display:flex;gap:6px;background:rgba(255,255,255,.96);padding:5px;border-radius:10px;box-shadow:var(--shadow)}.searchbox input{flex:1;border:0;outline:0;padding:7px 9px;min-width:0}.searchbox button{padding:8px 12px}
 .drive-ui{position:absolute;z-index:1300;left:0;right:0;top:0;bottom:0;pointer-events:none;display:none}.drive-ui .instruction,.drive-ui .routebar,.drive-ui .lane-cue{display:none}.drive-ui .instruction.show,.drive-ui .routebar.show,.drive-ui .lane-cue.show{display:flex}.drive-ui>*{pointer-events:auto}
@@ -97,7 +97,7 @@ function parseSpeedLimit(v){if(v==null)return null;const x=String(v).toLowerCase
 function updateSpeedWarning(speed){const el=document.getElementById('speedWarning');if(!speedLimit||speed<1){el.classList.remove('show');return}const over=speed>speedLimit+3;if(over){el.textContent=`SLOW DOWN — ${mph(speed)} mph / ${speedLimit} mph limit`;el.classList.add('show');}else el.classList.remove('show');}
 function updateStats(p){const speed=mph(p?.speed||0), lim=speedLimit;ST.style.display='flex';const rem=lastPos?routeRemaining(lastPos):routeMeta.distance;const eta=Math.max(0,Math.round((routeMeta.duration||0)*(rem/Math.max(1,routeMeta.distance))/60));ST.innerHTML=`<div class="stat"><b>${speed} mph</b><small>SPEED</small></div><div class="stat limit ${lim&&speed>lim+3?'over':''}"><b>${lim?lim+' mph':(speedLimitLabel||'—')}</b><small>SPEED LIMIT</small></div><div class="stat"><b>${formatDistance(rem)}</b><small>REMAINING</small></div><div class="stat"><b>${eta} min</b><small>ETA</small></div>`;updateSpeedWarning(p?.speed||0);}
 function setMapRotation(h){if(!driveMode||h==null)return;let d=((h%360)+360)%360;mapHeading=d;document.getElementById('mapViewport').style.transform=`scale(1) rotate(${-d}deg)`;const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform=`rotate(${d}deg)`;}
-function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
+function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.22+360)%360;}
 function lookAheadCenter(p,h){if(h==null)return [p.lat,p.lon];const dist=45;const r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');el.classList.remove('show');}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');el.textContent=msg;el.classList.add('show');}
@@ -157,7 +157,7 @@ async function navigationEngine(p){
  if(distTo<thresholds[1]&&!announced[key+'b']){announced[key+'b']=1;speak(type==='roundabout'||type==='rotary'?mannerRoundabout(st):`${manner(st)} in ${formatDistance(distTo)}.`)}
  if(distTo<thresholds[2]&&!announced[key+'c']){announced[key+'c']=1;speak(type==='roundabout'||type==='rotary'?mannerRoundabout(st):manner(st)+' now.')}
  await trafficLightAlert(p); await roadDataCheck(p); renderDrive(p);
- if(type==='arrive'&&distTo<28&&!arrivedAnnounced){arrivedAnnounced=true;speak("You're here mate.");toast("You're here mate");INS.innerHTML=`<div class="arrow">✓</div><div class="ins-main"><div class="big">YOU'RE HERE MATE</div><div class="sub">Destination reached</div></div><div class="distance">0 yd</div>`;INS.classList.add('show');}
+ if(type==='arrive'&&distTo<28&&!arrivedAnnounced){arrivedAnnounced=true;speak("Mate, you made it to your destination. Good work!");toast("Mate, you made it to your destination. Good work!");INS.innerHTML=`<div class="arrow">✓</div><div class="ins-main"><div class="big">MATE, YOU MADE IT!</div><div class="sub">Good work — destination reached</div></div><div class="distance">0 yd</div>`;INS.classList.add('show');}
 }
 
 function manner(st){return maneuverLabel(st).toLowerCase()}
