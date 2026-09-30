@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 V17 — Heading + Forward Driving Fix</title>
+<title>MUK SATNAV 86 V19 — Clean Road-Level Driving Structure</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
@@ -116,8 +116,35 @@ body{background:var(--neon-bg)!important}
  .drive-active .speed-block b{font-size:19px}
 }
 
+
+/* V19 CLEAN ROAD-LEVEL DRIVING STRUCTURE — original MUK SATNAV 86 implementation */
+:root{--m19-green:#27311e;--m19-white:rgba(255,255,255,.97);--m19-muted:#667064;--m19-blue:#1976d2;--m19-route:#2878e8}
+.drive-active #map{background:#e8ece7!important;box-shadow:none}
+.drive-active .leaflet-tile-pane{filter:brightness(1.03) saturate(.82) contrast(1.02)!important}
+.drive-active .leaflet-overlay-pane{filter:drop-shadow(0 2px 3px rgba(0,0,0,.22))!important}
+.drive-active .leaflet-map-pane{transform:perspective(900px) rotateX(58deg) rotateZ(var(--map-rotate,0deg)) scale(1.42)!important;transform-origin:50% 91%!important}
+.drive-active .leaflet-marker-icon{transform:rotateX(-58deg) rotateZ(var(--label-counter-rotate,0deg))!important;transform-origin:50% 50%}
+.drive-active .nav-top{top:10px!important;left:10px!important;right:10px!important;width:auto!important;max-width:none!important;transform:none!important;pointer-events:none}
+.drive-active .nav-back,.drive-active .nav-sound{pointer-events:auto;width:44px;height:44px;background:var(--m19-white);color:var(--m19-green);border:0;box-shadow:0 3px 15px rgba(0,0,0,.22)}
+.drive-active .nav-destination{height:50px;background:var(--m19-white);border:0;border-radius:25px;box-shadow:0 3px 15px rgba(0,0,0,.22);color:#182016}
+.drive-active .nav-destination small{color:#788074}.drive-active .nav-destination b{color:#182016}
+.drive-active .instruction{top:70px!important;left:10px!important;right:10px!important;width:auto!important;max-width:none!important;transform:none!important;min-height:78px;background:var(--m19-white);border:0;border-left:5px solid var(--m19-green);border-radius:15px;box-shadow:0 4px 18px rgba(0,0,0,.23);color:#182016}
+.drive-active .instruction .arrow{color:var(--m19-green);text-shadow:none}.drive-active .ins-main .big,.drive-active .distance{color:#182016;text-shadow:none}.drive-active .ins-main .sub{color:var(--m19-muted)}
+.drive-active .routebar{top:153px!important;left:10px!important;right:10px!important;width:auto!important;transform:none!important;height:31px;background:rgba(39,49,30,.94);border:0;box-shadow:0 3px 12px rgba(0,0,0,.18);color:#fff}
+.drive-active .bottom-sheet{left:10px!important;right:10px!important;bottom:10px!important;width:auto!important;min-width:0!important;max-width:none!important;transform:none!important;background:var(--m19-white);border:0;border-radius:18px;box-shadow:0 -3px 22px rgba(0,0,0,.24);padding:9px 12px 11px;color:#182016}
+.drive-active .sheet-main{grid-template-columns:1.15fr 1fr .78fr .78fr}.drive-active .sheet-main>div{border-right:1px solid #e1e4df}.drive-active .sheet-main b{color:#182016;text-shadow:none}.drive-active .eta-block b,.drive-active .remain-block b{color:#182016}.drive-active .speed-block b{color:#182016}.drive-active .limit-block b{color:#182016}.drive-active .sheet-main span,.drive-active .sheet-road span:last-child{color:#70776d}.drive-active .sheet-road{color:#3f463c;border-top:1px solid #e2e5df}
+.drive-active .nav-side{top:205px!important;right:10px!important}.drive-active .map-btn{background:var(--m19-white);color:var(--m19-green);border:0;box-shadow:0 3px 14px rgba(0,0,0,.22)}
+.drive-active .lane-cue{bottom:126px;background:var(--m19-white);color:var(--m19-green);border:0;box-shadow:0 3px 14px rgba(0,0,0,.22)}
+.drive-active .road-alert,.drive-active .speed-warning{top:192px;background:var(--m19-white);color:#4d3b00;border:2px solid #d8b64f;box-shadow:0 3px 14px rgba(0,0,0,.2)}
+.drive-active .muk-car .car-arrow{color:#1976d2!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))!important;text-shadow:none!important}
+.drive-active .leaflet-overlay-pane path{stroke:#2878e8!important}.route-casing{filter:drop-shadow(0 2px 3px rgba(0,0,0,.22))!important}
+@media(max-width:600px){.drive-active .leaflet-map-pane{transform:perspective(900px) rotateX(58deg) rotateZ(var(--map-rotate,0deg)) scale(1.42)!important}.drive-active .nav-top{top:10px!important}.drive-active .instruction{top:70px!important}.drive-active .routebar{top:153px!important}.drive-active .bottom-sheet{bottom:9px!important}.drive-active .sheet-main b{font-size:16px}.drive-active .eta-block b{font-size:20px}}
+/* V19: complex junction mode enlarges the manoeuvre cue only near the decision point */
+.drive-active.complex-junction .instruction{min-height:104px;top:64px!important;border-left-width:8px}
+.drive-active.complex-junction .instruction .arrow{font-size:58px;width:70px}
+.drive-active.complex-junction .instruction .big{font-size:25px}
 </style>
-<meta name="muk-build" content="MUK SATNAV 86 Neon Forward Perspective V15 - 42 degree pitch + upright labels + low-speed route snap">
+<meta name="muk-build" content="MUK SATNAV 86 V19 - Clean road-level driving structure, heading fusion, dynamic manoeuvre UI">
 </head>
 <body>
 <div id="app">
@@ -135,7 +162,7 @@ body{background:var(--neon-bg)!important}
   <div class="bottom-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-main"><div class="eta-block"><b id="etaValue">--:--</b><span>arrival</span></div><div class="remain-block"><b id="remainValue">—</b><span>remaining</span></div><div class="speed-block"><b id="speedValue">0</b><span>mph</span></div><div class="limit-block"><b id="limitValue">—</b><span>limit</span></div></div>
-    <div class="sheet-road"><span id="currentRoad">Locating road…</span><span id="navStatus">GPS ready</span></div>
+    <div class="sheet-road"><span id="currentRoad">Locating road…</span><span id="navStatus">GPS ready · Route guidance</span></div>
   </div>
 </div>
 <div id="panel" class="panel"></div>
@@ -355,6 +382,8 @@ async function onPosition(pos){
    const c2=lookAheadCenter(p,p.heading);
    map.setView(c2,18.2,{animate:false});
    setMapRotation(p.heading);
+   // V19 camera: normal forward view, tighter look-ahead near manoeuvres.
+   if(routeSteps.length){const ns=routeSteps[Math.min(stepIndex,routeSteps.length-1)];const nd=distanceToStep(p,ns);if(nd<190){const c3=lookAheadCenter(p,p.heading);map.setView(c3,18.8,{animate:false});}}
  } else {map.setView([p.lat,p.lon],18.2,{animate:false});applyMapVisual();}
  await speedLimitCheck(p);
  const near=nearestOnRoute(p);
@@ -462,20 +491,21 @@ function laneMarkup(st){
 function renderDrive(p){
  if(!driveMode||!routeSteps.length)return;
  let st=routeSteps[Math.min(stepIndex,routeSteps.length-1)];
- // Skip non-actionable steps so the display never sits on a useless "continue" instruction.
- while(st && !actionableStep(st) && stepIndex<routeSteps.length-1){stepIndex++;st=routeSteps[stepIndex];}
- if(!st){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
+ while(st&&!actionableStep(st)&&stepIndex<routeSteps.length-1){stepIndex++;st=routeSteps[stepIndex];}
+ if(!st){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.body.classList.remove('complex-junction');return;}
  const d=distanceToStep(p,st), t=st.maneuver?.type||'', text=maneuverLabel(st);
- // Keep the large instruction hidden until the manoeuvre is genuinely approaching.
- const visible=d<=520 || (t==='arrive' && d<45);
+ const complex=(t==='roundabout'||t==='rotary'||t==='fork'||t==='merge'||(st.intersections?.[0]?.lanes?.length>1))&&d<190;
+ document.body.classList.toggle('complex-junction',complex);
+ // Clean road-level presentation: no permanent instruction while the manoeuvre is distant.
+ const visible=d<=520 || (t==='arrive'&&d<45);
  if(!visible){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
  INS.innerHTML=`<div class="arrow">${maneuverArrow(st)}</div><div class="ins-main"><div class="big">${esc(text)}</div><div class="sub">${esc(roadName(st)||'Follow the route')}</div></div><div class="distance">${esc(formatDistance(d))}</div>`;
  INS.classList.add('show');
- RB.innerHTML=`<span class="nextroad">${esc(roadName(st)||'Next manoeuvre')}</span><span><b>${esc(formatDistance(d))}</b></span>`;
- RB.classList.add('show');
+ RB.innerHTML=`<span class="nextroad">${esc(roadName(st)||'Next manoeuvre')}</span><span><b>${esc(formatDistance(d))}</b></span>`;RB.classList.add('show');
  const lm=laneMarkup(st);
  if(lm&&d<350){LANE.innerHTML=lm;LANE.classList.add('show')}else LANE.classList.remove('show');
 }
+
 function maneuverArrow(st){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
  if(t==='roundabout'||t==='rotary')return '↻';
