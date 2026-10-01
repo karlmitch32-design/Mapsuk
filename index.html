@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — Commercial Forward Neon V25 Navigation Fix</title>
+<title>MUK SATNAV 86 — Commercial Forward Neon V27 Navigation Correction</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
@@ -13,7 +13,7 @@
 .topbar{position:absolute;z-index:1200;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(255,255,255,.96);border-radius:10px;padding:8px 11px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.6px;color:var(--nav)}.searchbox{flex:1;display:flex;gap:6px;background:rgba(255,255,255,.96);padding:5px;border-radius:10px;box-shadow:var(--shadow)}.searchbox input{flex:1;border:0;outline:0;padding:7px 9px;min-width:0}.searchbox button{padding:8px 12px}
 .drive-ui{position:absolute;z-index:1300;left:0;right:0;top:0;bottom:0;pointer-events:none;display:none}.drive-ui .instruction,.drive-ui .routebar,.drive-ui .lane-cue{display:none}.drive-ui .instruction.show,.drive-ui .routebar.show,.drive-ui .lane-cue.show{display:flex}.drive-ui>*{pointer-events:auto}
 /* Large next manoeuvre panel, like a dedicated navigation unit */
-.instruction{position:absolute;top:10px;left:10px;right:10px;margin:0;background:rgba(255,255,255,.98);border-radius:12px;box-shadow:var(--shadow);min-height:86px;padding:10px 14px;display:flex;align-items:center;gap:14px;border-left:8px solid var(--nav)}.arrow{font-size:52px;line-height:1;color:var(--nav);width:64px;text-align:center;font-weight:900}.ins-main{flex:1;min-width:0}.ins-main .big{font-size:24px;font-weight:950;line-height:1.05;text-transform:uppercase}.ins-main .sub{font-size:13px;color:var(--muted);margin-top:5px;font-weight:750}.distance{font-size:28px;font-weight:950;white-space:nowrap;color:var(--nav)}
+.instruction{position:absolute;top:10px;left:10px;right:10px;margin:0;background:rgba(255,255,255,.98);border-radius:12px;box-shadow:var(--shadow);min-height:86px;padding:10px 14px;display:flex;align-items:center;gap:14px;border-left:8px solid var(--nav)}.arrow{font-size:52px;line-height:1;color:var(--nav);width:64px;text-align:center;font-weight:900}.ins-main{flex:1;min-width:0}.ins-main .big{font-size:24px;font-weight:950;line-height:1.05;text-transform:uppercase}.ins-main .sub{font-size:13px;color:var(--muted);margin-top:5px;font-weight:750}.roundabout-graphic{width:78px;height:70px;flex:0 0 78px}.roundabout-graphic svg{width:100%;height:100%;display:block}.distance{font-size:28px;font-weight:950;white-space:nowrap;color:var(--nav)}
 .routebar{position:absolute;top:104px;left:10px;right:10px;margin:0;background:rgba(39,49,30,.96);color:#fff;border-radius:9px;box-shadow:var(--shadow);padding:8px 12px;display:flex;gap:16px;align-items:center;overflow:hidden}.routebar span{font-size:11px;white-space:nowrap}.routebar b{font-size:13px}.routebar .nextroad{font-weight:850;flex:1;overflow:hidden;text-overflow:ellipsis}
 /* Bottom dedicated-navigation information strip */
 .bottom{position:absolute;z-index:1300;left:10px;right:10px;bottom:10px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}.bottom>*{pointer-events:auto}.stats{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.97);padding:6px;border-radius:11px;box-shadow:var(--shadow)}.stat{min-width:82px;padding:4px 8px;border-right:1px solid #ddd}.stat:last-child{border-right:0}.stat b{display:block;font-size:17px}.stat.limit b{font-size:18px}.stat.limit.over b{color:#c22b1d}.speed-warning{display:none;position:absolute;z-index:1450;top:86px;left:50%;transform:translateX(-50%);background:#c22b1d;color:#fff;border-radius:12px;padding:9px 14px;box-shadow:var(--shadow);font-weight:950}.speed-warning.show{display:block}.stat small{color:var(--muted);font-size:10px;font-weight:700}.controls{display:flex;gap:7px}.round{width:46px;height:46px;padding:0;border-radius:50%;box-shadow:var(--shadow);background:rgba(255,255,255,.97);color:var(--nav);font-size:20px}
@@ -45,7 +45,7 @@ function show(x){P.innerHTML=x;P.classList.add('show')} function hide(){P.classL
 function toast(x){TOAST.textContent=x;TOAST.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>TOAST.classList.remove('show'),3000)}
 function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
 function formatDistance(m){if(m<1000)return Math.max(5,Math.round(m/5)*5)+' yd';return (m/1609.344).toFixed(m<16093?1:0)+' mi'}
-function speak(t){if(!voiceOn||!('speechSynthesis'in window)||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.96;u.pitch=1;speechSynthesis.speak(u)}catch(e){}}
+function speak(t){if(!voiceOn||!('speechSynthesis'in window)||!t)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.98;u.pitch=1;speechSynthesis.speak(u)}catch(e){}}
 function bearing(a,b){const r=Math.PI/180,la=a.lat*r,lb=b.lat*r,dl=(b.lon-a.lon)*r;return (Math.atan2(Math.sin(dl)*Math.cos(lb),Math.cos(la)*Math.sin(lb)-Math.sin(la)*Math.cos(lb)*Math.cos(dl))*180/Math.PI+360)%360}
 function angleDiff(a,b){let d=Math.abs(a-b)%360;return d>180?360-d:d}
 function hav(a,b){const R=6371000,r=Math.PI/180,d1=(b.lat-a.lat)*r,d2=(b.lon-a.lon)*r,x=Math.sin(d1/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(d2/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
@@ -107,6 +107,8 @@ function speedLimitFromTags(t){
  if(String(tags['maxspeed:type']||'').toLowerCase().includes('urban'))return {limit:null,label:'Urban limit',source:'type'};
  return {limit:null,label:'—',source:'unknown'};
 }
+function speedLimitFromTagsDirectional(t,heading,a,b){const tags=t||{};const explicit=parseSpeedLimit(tags.maxspeed);if(explicit)return {limit:explicit,label:explicit+' mph',source:'mapped'};const f=parseSpeedLimit(tags['maxspeed:forward']),bk=parseSpeedLimit(tags['maxspeed:backward']);if(heading!=null&&a&&b){const rb=bearing(a,b);if(f&&angleDiff(heading,rb)<70)return {limit:f,label:f+' mph',source:'mapped'};if(bk&&angleDiff(heading,(rb+180)%360)<70)return {limit:bk,label:bk+' mph',source:'mapped'};}return speedLimitFromTags(tags);}
+
 function speedChangeRing(){
   if(Date.now()-speedRingAt<7000)return; speedRingAt=Date.now();
   try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC();const now=ctx.currentTime;const gain=ctx.createGain();gain.gain.setValueAtTime(0.0001,now);gain.gain.exponentialRampToValueAtTime(0.16,now+0.02);gain.gain.exponentialRampToValueAtTime(0.0001,now+0.42);gain.connect(ctx.destination);const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(880,now);o.frequency.exponentialRampToValueAtTime(660,now+0.18);o.connect(gain);o.start(now);o.stop(now+0.44);setTimeout(()=>{try{ctx.close()}catch(e){}},700)}catch(e){}
@@ -126,16 +128,14 @@ function routePointAhead(p,metres){
  const c=routeGeo.coordinates[routeGeo.coordinates.length-1];return {lat:c[1],lon:c[0],index:routeGeo.coordinates.length-2};
 }
 async function checkUpcomingSpeedChange(p){
- if(!routeGeo?.coordinates?.length||Date.now()-speedChangeFetchedAt<12000)return;
- speedChangeFetchedAt=Date.now();
- const ahead=routePointAhead(p,180); if(!ahead)return;
- try{const q=`[out:json][timeout:7];way(around:75,${ahead.lat},${ahead.lon})[highway];out tags geom;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(!r.ok)return;const j=await r.json();let best=null;for(const w of (j.elements||[])){const g=w.geometry||[];for(let i=1;i<g.length;i++){const z=roadSegmentDistance(ahead,{lat:g[i-1].lat,lon:g[i-1].lon},{lat:g[i].lat,lon:g[i].lon});if(!best||z.d<best.d)best={d:z.d,tags:w.tags||{}};}}
-   if(!best||best.d>45)return; const upcoming=parseSpeedLimit(best.tags.maxspeed); if(!upcoming||!speedLimit||upcoming===speedLimit)return;
-   const key=`speed-change-${upcoming}-${Math.round(ahead.lat*1e4)}-${Math.round(ahead.lon*1e4)}`;
-   if(speedChangeState?.key===key)return; speedChangeState={key,limit:upcoming};
-   speak('Mate, road speed changes ahead.');
-   setTimeout(()=>{if(speedChangeState?.key!==key)return; const dir=upcoming<speedLimit?'lower':'higher'; speak(dir==='lower'?`Mate, you're approaching a new speed limit. If you're driving too fast, slow down.`:`Mate, you're approaching a higher speed limit. Drive safely.`)},1400);
- }catch(e){}
+ if(!routeGeo?.coordinates?.length||Date.now()-speedChangeFetchedAt<8000)return;
+ speedChangeFetchedAt=Date.now(); if(!speedLimit)return;
+ for(const metres of [110,180,260,340]){const ahead=routePointAhead(p,metres);if(!ahead)continue;try{
+  const q=`[out:json][timeout:7];way(around:65,${ahead.lat},${ahead.lon})[highway];out tags geom;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(!r.ok)continue;const j=await r.json();let best=null;const routeHeading=routeBearingAt(ahead.index);
+  for(const w of (j.elements||[])){const g=w.geometry||[];for(let i=1;i<g.length;i++){const a={lat:g[i-1].lat,lon:g[i-1].lon},b={lat:g[i].lat,lon:g[i].lon},z=roadSegmentDistance(ahead,a,b);if(z.d>35)continue;const rb=bearing(a,b),rev=String(w.tags?.oneway||'').toLowerCase()==='-1',roadBearing=rev?bearing(b,a):rb,hp=routeHeading==null?0:angleDiff(routeHeading,roadBearing),data=speedLimitFromTagsDirectional(w.tags||{},routeHeading,a,b);if(!data.limit||hp>70)continue;const score=z.d+hp*.25;if(!best||score<best.score)best={score,data};}}
+  if(!best||best.data.limit===speedLimit)continue;const key=`speed-change-${best.data.limit}-${Math.round(ahead.lat*1e4)}-${Math.round(ahead.lon*1e4)}`;if(speedChangeState?.key===key)return;speedChangeState={key,limit:best.data.limit};
+  speak(best.data.limit<speedLimit?`Mate, road speed changes ahead. You're approaching a new speed limit. If you're driving too fast, slow down.`:`Mate, road speed changes ahead. You're approaching a higher speed limit. Drive safely.`);return;
+ }catch(e){}}
 }
 
 function updateStats(p){const speed=mph(p?.speed||0), lim=speedLimit;ST.style.display='flex';const rem=lastPos?routeRemaining(lastPos):routeMeta.distance;const eta=Math.max(0,Math.round((routeMeta.duration||0)*(rem/Math.max(1,routeMeta.distance))/60));ST.innerHTML=`<div class="stat"><b>${speed} mph</b><small>SPEED</small></div><div class="stat limit ${lim&&speed>lim+3?'over':''}"><b>${lim?lim+' mph':(speedLimitLabel||'—')}</b><small>SPEED LIMIT</small></div><div class="stat"><b>${formatDistance(rem)}</b><small>REMAINING</small></div><div class="stat"><b>${eta} min</b><small>ETA</small></div>`;updateSpeedWarning(p?.speed||0);}
@@ -147,32 +147,11 @@ function showRoadAlert(msg){const el=document.getElementById('roadAlert');el.tex
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180, x1=(a.lon-p.lon)*Math.cos(meanLat),y1=a.lat-p.lat,x2=(b.lon-p.lon)*Math.cos(meanLat),y2=b.lat-p.lat;const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(0-x1)*dx+(0-y1)*dy)/(dx*dx+dy*dy||1));const q={lat:p.lat+(y1+t*dy),lon:p.lon+(x1+t*dx)/Math.cos(meanLat)};return {d:hav(p,q),q};}
 async function roadDataCheck(p){if(Date.now()-roadRuleFetchedAt<12000)return;roadRuleFetchedAt=Date.now();try{const q=`[out:json][timeout:7];(way(around:90,${p.lat},${p.lon})[highway];node(around:120,${p.lat},${p.lon})[traffic_sign~"GB:616",i];);out tags geom;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(!r.ok)return;const j=await r.json();const noEntry=(j.elements||[]).filter(e=>e.type==='node'&&String(e.tags?.traffic_sign||'').toUpperCase().includes('GB:616'));if(noEntry.length&&p.heading!=null){for(const n of noEntry){const d=hav(p,{lat:n.lat,lon:n.lon}),b=bearing(p,{lat:n.lat,lon:n.lon});if(d<90&&angleDiff(p.heading,b)<40){showRoadAlert('⚠ NO-ENTRY SIGN AHEAD');const key='noentry-'+Math.round(n.lat*1e5)+'-'+Math.round(n.lon*1e5);if(!announced[key]){announced[key]=1;speak('Warning. No entry sign ahead.');}break;}}}let best=null;for(const w of (j.elements||[])){const g=w.geometry||[];for(let i=1;i<g.length;i++){const z=roadSegmentDistance(p,{lat:g[i-1].lat,lon:g[i-1].lon},{lat:g[i].lat,lon:g[i].lon});if(!best||z.d<best.d)best={d:z.d,tags:w.tags||{},a:g[i-1],b:g[i]};}}if(!best||best.d>45)return;const t=best.tags||{};const one=t.oneway;let wrongOneWay=false;if(['yes','true','1'].includes(String(one).toLowerCase())){const rb=bearing(best.a,best.b);wrongOneWay=angleDiff(p.heading||rb,rb)>115;}else if(String(one).toLowerCase()==='-1'){const rb=bearing(best.b,best.a);wrongOneWay=angleDiff(p.heading||rb,rb)>115;}roadRuleState={wrongOneWay,road:t.name||t.ref||'',oneway:one,access:t.access||'',vehicle:t.vehicle||'',highway:t.highway||''};if(wrongOneWay){showRoadAlert('⚠ WRONG-WAY / NO-ENTRY ROAD');const key='oneway-warning';if(!announced[key]){announced[key]=1;speak('Warning. You appear to be travelling against the road direction.');}}else if(['no','private'].includes(String(t.access||'').toLowerCase())||['no','private'].includes(String(t.vehicle||'').toLowerCase())){showRoadAlert('⚠ ROAD ACCESS RESTRICTION');}else resetRoadAlert();}catch(e){}}
 async function speedLimitCheck(p){
- if(Date.now()-speedLimitFetchedAt<5000)return;
- speedLimitFetchedAt=Date.now();
- try{
-  const q=`[out:json][timeout:8];way(around:140,${p.lat},${p.lon})[highway];out tags geom;`;
-  const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));
-  if(!r.ok)throw Error('speed data unavailable');
-  const j=await r.json();
-  let candidates=[];
-  for(const w of (j.elements||[])){
-   const g=w.geometry||[];
-   for(let i=1;i<g.length;i++){
-    const a={lat:g[i-1].lat,lon:g[i-1].lon},b={lat:g[i].lat,lon:g[i].lon};
-    const z=roadSegmentDistance(p,a,b);
-    if(z.d<=65){const rb=bearing(a,b);const reverse=String(w.tags?.oneway||'').toLowerCase()==='-1';const roadBearing=reverse?bearing(b,a):rb;const headingPenalty=p.heading==null?0:angleDiff(p.heading,roadBearing);
-      candidates.push({d:z.d,headingPenalty,tags:w.tags||{},a,b});}
-   }
-  }
-  candidates.sort((a,b)=>(a.d+a.headingPenalty*0.35)-(b.d+b.headingPenalty*0.35));
-  const best=candidates.find(x=>x.headingPenalty<65)||candidates[0];
-  if(!best){speedLimit=null;speedLimitLabel=null;return;}
-  const data=speedLimitFromTags(best.tags);
-  speedLimit=data.limit; speedLimitLabel=data.label;
-  roadRuleState=roadRuleState||{};
-  roadRuleState.road=best.tags.name||best.tags.ref||roadRuleState.road||'';
-  roadRuleState.highway=best.tags.highway||roadRuleState.highway||'';
- }catch(e){speedLimit=null;speedLimitLabel=null;}
+ if(Date.now()-speedLimitFetchedAt<4000)return;speedLimitFetchedAt=Date.now();
+ try{const q=`[out:json][timeout:8];way(around:150,${p.lat},${p.lon})[highway];out tags geom;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(!r.ok)throw Error();const j=await r.json();let candidates=[];
+  for(const w of (j.elements||[])){const g=w.geometry||[];for(let i=1;i<g.length;i++){const a={lat:g[i-1].lat,lon:g[i-1].lon},b={lat:g[i].lat,lon:g[i].lon},z=roadSegmentDistance(p,a,b);if(z.d>70)continue;const base=bearing(a,b),rev=String(w.tags?.oneway||'').toLowerCase()==='-1',rb=rev?bearing(b,a):base,hp=p.heading==null?0:angleDiff(p.heading,rb),routeHeading=routeGeo?.coordinates?.length?routeBearingAt(nearestOnRoute(p).index):null,rhp=routeHeading==null?0:angleDiff(routeHeading,rb);if(hp>80||rhp>80)continue;candidates.push({score:z.d+hp*.35+rhp*.55,tags:w.tags||{},a,b});}}
+  candidates.sort((a,b)=>a.score-b.score);const best=candidates[0];if(!best){speedLimit=null;speedLimitLabel='—';return;}const data=speedLimitFromTagsDirectional(best.tags,p.heading,best.a,best.b);speedLimit=data.limit;speedLimitLabel=data.label;roadRuleState=roadRuleState||{};roadRuleState.road=best.tags.name||best.tags.ref||'';roadRuleState.highway=best.tags.highway||'';
+ }catch(e){speedLimit=null;speedLimitLabel='—';}
 }
 function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);requestWakeLock();watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});toast('Live navigation started')}
 function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();document.getElementById('mapViewport').style.transform='scale(1) rotate(0deg)';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
@@ -196,87 +175,19 @@ function sameJunctionAfterRoundabout(index){
  if(!a||!b)return false;
  return hav({lat:a[1],lon:a[0]},{lat:b[1],lon:b[0]})<75;
 }
-function navigationEngine(p){
- const near=nearestOnRoute(p);
- if(near.d>65){
-   if(!offRouteSince)offRouteSince=Date.now();
-   if(Date.now()-offRouteSince>2200&&Date.now()-lastReroute>9000){
-     toast('Off route — recalculating'); speak('You are off route. Recalculating.'); lastReroute=Date.now();
-     return buildRoute(p,current,true).then(()=>{offRouteSince=0}).catch(()=>toast('Unable to recalculate right now'));
-   }
- }else offRouteSince=0;
- const rb=routeBearingAt(near.index);
- if(p.heading!=null&&near.d<50&&rb!=null&&angleDiff(p.heading,rb)>115&&p.speed>2){
-   if(!wrongWaySince)wrongWaySince=Date.now();
-   if(Date.now()-wrongWaySince>1800&&Date.now()-lastReroute>9000){
-     toast('Wrong direction — recalculating'); speak('Wrong direction. Recalculating.'); lastReroute=Date.now();
-     return buildRoute(p,current,true).then(()=>{wrongWaySince=0}).catch(()=>{});
-   }
- }else wrongWaySince=0;
- let st=routeSteps[stepIndex]; if(!st)return;
- let distTo=distanceToStep(p,st), type=st.maneuver?.type||'';
- // Do not announce a following generic turn as part of the roundabout exit.
- if(sameJunctionAfterRoundabout(stepIndex)&&distTo<90){ renderDrive(p); return; }
- // Advance only when the vehicle has actually reached the manoeuvre.
- if(actionableStep(st)&&distTo<22&&stepIndex<routeSteps.length-1){
-   const oldIndex=stepIndex; stepIndex++;
-   while(stepIndex<routeSteps.length-1&&!actionableStep(routeSteps[stepIndex]))stepIndex++;
-   const n=routeSteps[stepIndex],key='step'+stepIndex;
-   // If the next step is the same roundabout junction, keep the roundabout instruction active.
-   if(isRoundaboutStep(routeSteps[oldIndex]) && sameJunctionAfterRoundabout(stepIndex)){ renderDrive(p); return; }
-   if(!announced[key]){announced[key]=1;speak(announcementForStep(n));}
-   renderDrive(p); return;
- }
- if(!actionableStep(st)){renderDrive(p);return;}
- const key='warn'+stepIndex;
- // Much shorter, non-repeating guidance: one preparation call and one immediate call.
- const thresholds=isRoundaboutStep(st)?[300,45]:[320,35];
- if(distTo<thresholds[0]&&!announced[key+'a']){
-   announced[key+'a']=1;
-   speak(preparationForStep(st,distTo));
- }
- if(distTo<thresholds[1]&&!announced[key+'b']){
-   announced[key+'b']=1;
-   speak(immediateForStep(st));
- }
- trafficLightAlert(p); roadDataCheck(p); renderDrive(p);
- if(type==='arrive'&&distTo<28&&!arrivedAnnounced){arrivedAnnounced=true;speak("Mate, you made it to your destination. Good work!");toast("Mate, you made it to your destination. Good work!");INS.innerHTML=`<div class="arrow">✓</div><div class="ins-main"><div class="big">MATE, YOU MADE IT!</div><div class="sub">Good work — destination reached</div></div><div class="distance">0 yd</div>`;INS.classList.add('show');}
-}
+function roundaboutCompleted(p,st){if(!isRoundaboutStep(st)||!routeGeo?.coordinates?.length)return false;const loc=st?.maneuver?.location;if(!loc)return false;const target={lat:loc[1],lon:loc[0]};let idx=0,best=Infinity;const cs=routeGeo.coordinates;for(let i=0;i<cs.length;i++){const d=hav(target,{lat:cs[i][1],lon:cs[i][0]});if(d<best){best=d;idx=i;}}return nearestOnRoute(p).index>idx+4;}
+function navigationEngine(p){const near=nearestOnRoute(p);if(near.d>65){if(!offRouteSince)offRouteSince=Date.now();if(Date.now()-offRouteSince>2200&&Date.now()-lastReroute>9000){toast('Off route — recalculating');speak('You are off route. Recalculating.');lastReroute=Date.now();return buildRoute(p,current,true).then(()=>{offRouteSince=0}).catch(()=>toast('Unable to recalculate right now'));}}else offRouteSince=0;const rb=routeBearingAt(near.index);if(p.heading!=null&&near.d<50&&rb!=null&&angleDiff(p.heading,rb)>115&&p.speed>2){if(!wrongWaySince)wrongWaySince=Date.now();if(Date.now()-wrongWaySince>1800&&Date.now()-lastReroute>9000){toast('Wrong direction — recalculating');speak('Wrong direction. Recalculating.');lastReroute=Date.now();return buildRoute(p,current,true).then(()=>{wrongWaySince=0}).catch(()=>{});}}else wrongWaySince=0;let st=routeSteps[stepIndex];if(!st)return;let distTo=distanceToStep(p,st),type=st.maneuver?.type||'';
+ if(isRoundaboutStep(st)&&roundaboutCompleted(p,st)){if(stepIndex<routeSteps.length-1){stepIndex++;while(stepIndex<routeSteps.length-1&&!actionableStep(routeSteps[stepIndex]))stepIndex++;const n=routeSteps[stepIndex],key='step'+stepIndex;if(!announced[key]){announced[key]=1;speak(announcementForStep(n));}renderDrive(p);return;}}
+ if(!isRoundaboutStep(st)&&actionableStep(st)&&distTo<22&&stepIndex<routeSteps.length-1){stepIndex++;while(stepIndex<routeSteps.length-1&&!actionableStep(routeSteps[stepIndex]))stepIndex++;const n=routeSteps[stepIndex],key='step'+stepIndex;if(!announced[key]){announced[key]=1;speak(announcementForStep(n));}renderDrive(p);return;}
+ if(!actionableStep(st)){renderDrive(p);return;}const key='warn'+stepIndex;const thresholds=isRoundaboutStep(st)?[190,55]:[190,35];if(distTo<thresholds[0]&&!announced[key+'a']){announced[key+'a']=1;speak(preparationForStep(st,distTo));}if(!isRoundaboutStep(st)&&distTo<thresholds[1]&&!announced[key+'b']){announced[key+'b']=1;speak(immediateForStep(st));}roadDataCheck(p);renderDrive(p);if(type==='arrive'&&distTo<28&&!arrivedAnnounced){arrivedAnnounced=true;speak('Mate, you made it to your destination. Good work!');toast('Destination reached');INS.innerHTML='<div class="arrow">✓</div><div class="ins-main"><div class="big">MATE, YOU MADE IT!</div><div class="sub">Good work — destination reached</div></div><div class="distance">0 yd</div>';INS.classList.add('show');}}
 
 function manner(st){return maneuverLabel(st).toLowerCase()}
 function mannerRoundabout(st){const ex=st.maneuver?.exit;return ex?`take the ${ordinal(ex)} exit`:'take the correct exit'}
-function preparationForStep(st,d){
- const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
- if(isRoundaboutStep(st)){const ex=st.maneuver?.exit;return ex?`Roundabout ahead in ${formatDistance(d)}. Take the ${ordinal(ex)} exit.`:`Roundabout ahead in ${formatDistance(d)}.`;}
- if(t==='on ramp'||t==='off ramp')return m==='left'?`Slip road left ahead in ${formatDistance(d)}.`:m==='right'?`Slip road right ahead in ${formatDistance(d)}.`:`Slip road ahead in ${formatDistance(d)}.`;
- return `${m==='left'?'Left':m==='right'?'Right':'Next'} manoeuvre ahead in ${formatDistance(d)}.`;
-}
-function immediateForStep(st){
- const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
- if(isRoundaboutStep(st))return mannerRoundabout(st);
- if(t==='on ramp'||t==='off ramp')return m==='left'?'Take the slip road left now.':m==='right'?'Take the slip road right now.':'Take the slip road now.';
- return `${m==='left'?'Turn left':m==='right'?'Turn right':'Continue ahead'} now.`;
-}
-async function trafficLightAlert(p){
- if(Date.now()-trafficFetchedAt>30000){try{const q=`[out:json][timeout:8];node(around:180,${p.lat},${p.lon})[highway=traffic_signals];out;`;const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));if(r.ok){const j=await r.json();trafficCache=(j.elements||[]).map(e=>({lat:e.lat,lon:e.lon}));trafficFetchedAt=Date.now()}}catch(e){}}
- if(!trafficCache.length||p.heading==null||!routeGeo)return;
- const carNear=nearestOnRoute(p);
- for(const l of trafficCache){
-   const d=hav(p,l); if(d>25&&d<180){
-     const b=bearing(p,l);
-     if(angleDiff(p.heading,b)>=28)continue;
-     const near=nearestOnRoute(l);
-     // Require the signal to sit very close to the active route and genuinely ahead
-     // on the route geometry. This rejects lights on parallel/service roads.
-     if(near.d>22||near.index<carNear.index)continue;
-     const routePoint=near.point;
-     if(routePoint){const rb=routeBearingAt(near.index);if(rb!=null&&angleDiff(p.heading,rb)>45)continue;}
-     const key='light'+Math.round(l.lat*1e5)+'_'+Math.round(l.lon*1e5);
-     if(!announced[key]){announced[key]=1;speak(`Traffic lights ahead in ${formatDistance(d)}.`)}
-     return;
-   }
- }
-}
+
+function roundaboutSvg(exit){const ex=Math.max(1,Number(exit)||1),angle=-90+Math.min(6,ex)*48,rad=angle*Math.PI/180,x=50+31*Math.cos(rad),y=38+25*Math.sin(rad),label=esc(ordinal(ex)+' EXIT');return `<div class="roundabout-graphic" aria-label="${label}"><svg viewBox="0 0 100 76" role="img"><circle cx="50" cy="38" r="20" fill="none" stroke="#27311e" stroke-width="9"/><path d="M50 76 L50 58" stroke="#27311e" stroke-width="7" stroke-linecap="round"/><path d="M50 18 L50 5" stroke="#ff1744" stroke-width="6" stroke-linecap="round"/><path d="M50 5 L46 12 M50 5 L54 12" stroke="#ff1744" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M50 38 L${x.toFixed(1)} ${y.toFixed(1)}" stroke="#ff1744" stroke-width="5" stroke-linecap="round"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="#ff1744"/><text x="50" y="73" text-anchor="middle" font-size="7" font-weight="900" fill="#27311e">${label}</text></svg></div>`;}
+function preparationForStep(st,d){const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';if(isRoundaboutStep(st)){const ex=st.maneuver?.exit;return ex?`Roundabout ahead in ${formatDistance(d)}. Take the ${ordinal(ex)} exit.`:`Roundabout ahead in ${formatDistance(d)}.`;}if(t==='on ramp'||t==='off ramp')return m==='left'?`Slip road left ahead in ${formatDistance(d)}.`:m==='right'?`Slip road right ahead in ${formatDistance(d)}.`:`Slip road ahead in ${formatDistance(d)}.`;return `${m==='left'?'Left':m==='right'?'Right':'Next'} manoeuvre ahead in ${formatDistance(d)}.`;}
+function immediateForStep(st){const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';if(isRoundaboutStep(st))return '';if(t==='on ramp'||t==='off ramp')return m==='left'?'Take the slip road left now.':m==='right'?'Take the slip road right now.':'Take the slip road now.';return `${m==='left'?'Turn left':m==='right'?'Turn right':'Continue ahead'} now.`;}
+async function trafficLightAlert(p){return;}
 
 function carIcon(){
  const html='<div class="car-arrow" style="width:38px;height:52px;display:flex;align-items:center;justify-content:center;font-size:38px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));transform-origin:center">▲</div>';
@@ -312,23 +223,7 @@ function laneMarkup(st){
  if(!valid.length)return '';
  return '<div class="lane-cue-icon">'+valid.map(l=>{const a=l.indications||[];return a.includes('straight')?'↑':a.includes('slight right')?'↗':a.includes('right')?'→':a.includes('slight left')?'↖':a.includes('left')?'←':'↑'}).join(' ')+'</div><small>USE THE MARKED LANE</small>';
 }
-function renderDrive(p){
- if(!driveMode||!routeSteps.length)return;
- let st=routeSteps[Math.min(stepIndex,routeSteps.length-1)];
- // Skip non-actionable steps so the display never sits on a useless "continue" instruction.
- while(st && !actionableStep(st) && stepIndex<routeSteps.length-1){stepIndex++;st=routeSteps[stepIndex];}
- if(!st){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
- const d=distanceToStep(p,st), t=st.maneuver?.type||'', text=maneuverLabel(st);
- // Keep the large instruction hidden until the manoeuvre is genuinely approaching.
- const visible=d<=750 || t==='arrive';
- if(!visible){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
- INS.innerHTML=`<div class="arrow">${maneuverArrow(st)}</div><div class="ins-main"><div class="big">${esc(text)}</div><div class="sub">${esc(roadName(st)||'Follow the route')}</div></div><div class="distance">${esc(formatDistance(d))}</div>`;
- INS.classList.add('show');
- RB.innerHTML=`<span class="nextroad">${esc(roadName(st)||'Next manoeuvre')}</span><span><b>${esc(formatDistance(d))}</b></span>`;
- RB.classList.add('show');
- const lm=laneMarkup(st);
- if(lm&&d<350){LANE.innerHTML=lm;LANE.classList.add('show')}else LANE.classList.remove('show');
-}
+function renderDrive(p){if(!driveMode||!routeSteps.length)return;let st=routeSteps[Math.min(stepIndex,routeSteps.length-1)];while(st&&!actionableStep(st)&&stepIndex<routeSteps.length-1){stepIndex++;st=routeSteps[stepIndex];}if(!st){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}const d=distanceToStep(p,st),t=st.maneuver?.type||'',text=maneuverLabel(st),visible=d<=600||t==='arrive';if(!visible){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}const visual=(isRoundaboutStep(st)&&st.maneuver?.exit)?roundaboutSvg(st.maneuver.exit):`<div class="arrow">${maneuverArrow(st)}</div>`;INS.innerHTML=`${visual}<div class="ins-main"><div class="big">${esc(text)}</div><div class="sub">${esc(roadName(st)||'Follow the route')}</div></div><div class="distance">${esc(formatDistance(d))}</div>`;INS.classList.add('show');RB.innerHTML=`<span class="nextroad">${esc(roadName(st)||'Next manoeuvre')}</span><span><b>${esc(formatDistance(d))}</b></span>`;RB.classList.add('show');const lm=laneMarkup(st);if(lm&&d<300){LANE.innerHTML=lm;LANE.classList.add('show')}else LANE.classList.remove('show');}
 function maneuverArrow(st){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
  if(t==='roundabout'||t==='rotary')return '↻';
