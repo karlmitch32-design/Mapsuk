@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — Commercial Forward Neon V23</title>
+<title>MUK SATNAV 86 — Commercial Forward Neon V24</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
@@ -15,7 +15,7 @@
 /* Large next manoeuvre panel, like a dedicated navigation unit */
 .instruction{position:absolute;top:10px;left:10px;right:10px;margin:0;background:rgba(255,255,255,.98);border-radius:12px;box-shadow:var(--shadow);min-height:86px;padding:10px 14px;display:flex;align-items:center;gap:14px;border-left:8px solid var(--nav)}.arrow{font-size:52px;line-height:1;color:var(--nav);width:64px;text-align:center;font-weight:900}.ins-main{flex:1;min-width:0}.ins-main .big{font-size:24px;font-weight:950;line-height:1.05;text-transform:uppercase}.ins-main .sub{font-size:13px;color:var(--muted);margin-top:5px;font-weight:750}.distance{font-size:28px;font-weight:950;white-space:nowrap;color:var(--nav)}
 .routebar{position:absolute;top:104px;left:10px;right:10px;margin:0;background:rgba(39,49,30,.96);color:#fff;border-radius:9px;box-shadow:var(--shadow);padding:8px 12px;display:flex;gap:16px;align-items:center;overflow:hidden}.routebar span{font-size:11px;white-space:nowrap}.routebar b{font-size:13px}.routebar .nextroad{font-weight:850;flex:1;overflow:hidden;text-overflow:ellipsis}
-/* Bottom dedicated-navigation information strip */
+.roundabout-visual{display:none;position:absolute;right:12px;top:170px;width:138px;background:rgba(255,255,255,.97);border-radius:14px;box-shadow:var(--shadow);padding:7px;text-align:center;z-index:1320}.roundabout-visual.show{display:block}.rb-title{font-size:9px;font-weight:950;color:var(--nav);letter-spacing:.4px}.rb-title b{display:block;font-size:12px;margin-top:1px}.rb-diagram{position:relative;height:112px;margin-top:3px}.rb-ring{position:absolute;left:34px;top:24px;width:70px;height:70px;border:10px solid var(--nav);border-radius:50%}.rb-centre{position:absolute;left:53px;top:42px;width:32px;height:32px;border-radius:50%;background:#fff;font-size:22px;font-weight:950;line-height:32px;color:var(--nav)}.rb-exit{position:absolute;left:59px;top:1px;width:20px;height:20px;border-radius:50%;background:#e9ece3;color:var(--nav);font-size:10px;font-weight:950;line-height:20px}.rb-exit.active{background:#ff1493;color:#fff;box-shadow:0 0 8px #ff1493,0 0 14px rgba(255,20,147,.65)}.rb-exit:nth-of-type(2){left:94px;top:18px}.rb-exit:nth-of-type(3){left:101px;top:55px}.rb-exit:nth-of-type(4){left:59px;top:88px}.rb-exit:nth-of-type(5){left:17px;top:55px}.rb-exit:nth-of-type(6){left:24px;top:18px}.rb-exit:nth-of-type(7){left:59px;top:1px}./* Bottom dedicated-navigation information strip */
 .bottom{position:absolute;z-index:1300;left:10px;right:10px;bottom:10px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}.bottom>*{pointer-events:auto}.stats{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.97);padding:6px;border-radius:11px;box-shadow:var(--shadow)}.stat{min-width:82px;padding:4px 8px;border-right:1px solid #ddd}.stat:last-child{border-right:0}.stat b{display:block;font-size:17px}.stat.limit b{font-size:18px}.stat.limit.over b{color:#c22b1d}.speed-warning{display:none;position:absolute;z-index:1450;top:86px;left:50%;transform:translateX(-50%);background:#c22b1d;color:#fff;border-radius:12px;padding:9px 14px;box-shadow:var(--shadow);font-weight:950}.speed-warning.show{display:block}.stat small{color:var(--muted);font-size:10px;font-weight:700}.controls{display:flex;gap:7px}.round{width:46px;height:46px;padding:0;border-radius:50%;box-shadow:var(--shadow);background:rgba(255,255,255,.97);color:var(--nav);font-size:20px}
 .panel{position:absolute;z-index:1400;left:10px;right:10px;bottom:70px;background:#fff;border-radius:14px;padding:14px;box-shadow:var(--shadow);max-height:62%;overflow:auto;display:none}.panel.show{display:block}.small{font-size:12px;color:var(--muted);line-height:1.45}.notice{background:#f3f5ed;border:1px solid #dce2d3;padding:10px;border-radius:10px;margin-top:9px}.item{padding:11px 0;border-bottom:1px solid #e4e7df}.actions{display:flex;gap:7px;margin-top:9px}.actions button{flex:1}.row{display:flex;gap:7px}.row>*{flex:1}.toast{position:absolute;z-index:1500;left:50%;transform:translateX(-50%);bottom:82px;background:#242a20;color:#fff;padding:10px 15px;border-radius:12px;box-shadow:var(--shadow);display:none;font-weight:800}.toast.show{display:block}.menu{position:absolute;z-index:1401;right:10px;bottom:70px;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:7px;display:none;width:210px}.menu.show{display:block}.menu button{width:100%;margin:2px 0;text-align:left;background:#fff;color:var(--ink)}.menu button:hover{background:#edf0e7}
 /* Dedicated road-arrow / lane-style cue */
@@ -27,7 +27,7 @@
 <div id="app">
 <div id="mapViewport"><div id="map"></div></div>
 <div class="topbar"><div class="brand">MUK SATNAV 86</div><div class="searchbox"><input id="q" placeholder="Search UK address or postcode"><button onclick="find()">Find</button></div></div>
-<div id="driveUI" class="drive-ui" style="display:none"><div id="instruction" class="instruction"></div><div id="routebar" class="routebar"></div><div id="laneCue" class="lane-cue"></div></div>
+<div id="driveUI" class="drive-ui" style="display:none"><div id="instruction" class="instruction"></div><div id="routebar" class="routebar"></div><div id="roundaboutVisual" class="roundabout-visual"></div><div id="laneCue" class="lane-cue"></div></div>
 <div id="panel" class="panel"></div>
 <div id="toast" class="toast"></div><div id="speedWarning" class="speed-warning"></div><div id="roadAlert" class="road-alert"></div>
 <div id="menu" class="menu"></div>
@@ -37,7 +37,7 @@
 <script>
 const map=L.map('map',{zoomControl:true,zoomControlPosition:'bottomright',touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,boxZoom:true,keyboard:true}).setView([54.5,-3.4],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
-let routeLayer=null,myMarker=null,destMarker=null,startPulse=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,routeCum=[],voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},trafficCache=[],trafficFetchedAt=0,heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0,wakeLock=null,arrivedAnnounced=false;
+let routeLayer=null,myMarker=null,destMarker=null,startPulse=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,routeCum=[],voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},trafficCache=[],trafficFetchedAt=0,heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0,wakeLock=null,arrivedAnnounced=false,speedOverSince=0;
 const P=document.getElementById('panel'),UI=document.getElementById('driveUI'),INS=document.getElementById('instruction'),RB=document.getElementById('routebar'),ST=document.getElementById('stats'),TOAST=document.getElementById('toast'),MENU=document.getElementById('menu'),LANE=document.getElementById('laneCue');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const saved=()=>JSON.parse(localStorage.getItem('muk86.saved')||'[]'); const save=a=>localStorage.setItem('muk86.saved',JSON.stringify(a));
@@ -90,11 +90,11 @@ async function buildRoute(a,dest,startLive=false){
  if(startLive)startTracking();
  speak('Route planned. '+formatDistance(rt.distance)+' to go.');
 }
-function resetNavigationState(){announced={};offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;arrivedAnnounced=false;}
+function resetNavigationState(){announced={};offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;arrivedAnnounced=false;speedOverSince=0;}
 function distanceToStep(p,st){const loc=st?.maneuver?.location;if(loc)return hav(p,{lat:loc[1],lon:loc[0]});return stepDistance(st);}
 function mph(v){return Math.max(0,Math.round(v*2.236936));}
 function parseSpeedLimit(v){if(v==null)return null;const x=String(v).toLowerCase().trim();if(!x||['none','signals','variable'].includes(x))return null;if(x==='national'||x==='nsl'){speedLimitLabel='NSL';return null}const n=x.match(/\d+(?:\.\d+)?/);if(n){speedLimitLabel=Math.round(parseFloat(n[0]))+' mph';return Math.round(parseFloat(n[0]));}return null;}
-function updateSpeedWarning(speed){const el=document.getElementById('speedWarning');if(!speedLimit||speed<1){el.classList.remove('show');return}const over=speed>speedLimit+3;if(over){el.textContent=`SLOW DOWN — ${mph(speed)} mph / ${speedLimit} mph limit`;el.classList.add('show');}else el.classList.remove('show');}
+function updateSpeedWarning(speed){const el=document.getElementById('speedWarning');if(!speedLimit||speed<1){speedOverSince=0;el.classList.remove('show');return}const over=speed>speedLimit+3;if(over){if(!speedOverSince)speedOverSince=Date.now();if(Date.now()-speedOverSince>=1800){el.textContent=`SLOW DOWN — ${mph(speed)} mph / ${speedLimit} mph limit`;el.classList.add('show');}}else{speedOverSince=0;el.classList.remove('show');}}
 function updateStats(p){const speed=mph(p?.speed||0), lim=speedLimit;ST.style.display='flex';const rem=lastPos?routeRemaining(lastPos):routeMeta.distance;const eta=Math.max(0,Math.round((routeMeta.duration||0)*(rem/Math.max(1,routeMeta.distance))/60));ST.innerHTML=`<div class="stat"><b>${speed} mph</b><small>SPEED</small></div><div class="stat limit ${lim&&speed>lim+3?'over':''}"><b>${lim?lim+' mph':(speedLimitLabel||'—')}</b><small>SPEED LIMIT</small></div><div class="stat"><b>${formatDistance(rem)}</b><small>REMAINING</small></div><div class="stat"><b>${eta} min</b><small>ETA</small></div>`;updateSpeedWarning(p?.speed||0);}
 function setMapRotation(h){if(!driveMode||h==null)return;let d=((h%360)+360)%360;mapHeading=d;document.getElementById('mapViewport').style.transform=`scale(1) rotate(${-d}deg)`;const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform=`rotate(${d}deg)`;}
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.22+360)%360;}
@@ -203,17 +203,25 @@ function renderDrive(p){
  let st=routeSteps[Math.min(stepIndex,routeSteps.length-1)];
  // Skip non-actionable steps so the display never sits on a useless "continue" instruction.
  while(st && !actionableStep(st) && stepIndex<routeSteps.length-1){stepIndex++;st=routeSteps[stepIndex];}
- if(!st){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
+ if(!st){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('roundaboutVisual')?.classList.remove('show');return;}
  const d=distanceToStep(p,st), t=st.maneuver?.type||'', text=maneuverLabel(st);
  // Keep the large instruction hidden until the manoeuvre is genuinely approaching.
  const visible=d<=750 || t==='arrive';
- if(!visible){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');return;}
+ if(!visible){INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('roundaboutVisual')?.classList.remove('show');return;}
  INS.innerHTML=`<div class="arrow">${maneuverArrow(st)}</div><div class="ins-main"><div class="big">${esc(text)}</div><div class="sub">${esc(roadName(st)||'Follow the route')}</div></div><div class="distance">${esc(formatDistance(d))}</div>`;
  INS.classList.add('show');
  RB.innerHTML=`<span class="nextroad">${esc(roadName(st)||'Next manoeuvre')}</span><span><b>${esc(formatDistance(d))}</b></span>`;
  RB.classList.add('show');
+ const rv=document.getElementById('roundaboutVisual');
+ if(rv){if((t==='roundabout'||t==='rotary')&&d<420){const ex=Number(st.maneuver?.exit||st?.exit||0);rv.innerHTML=roundaboutMarkup(ex);rv.classList.add('show')}else rv.classList.remove('show');}
  const lm=laneMarkup(st);
  if(lm&&d<350){LANE.innerHTML=lm;LANE.classList.add('show')}else LANE.classList.remove('show');
+}
+function roundaboutMarkup(exit){
+ const ex=Math.max(0,Math.min(6,Number(exit)||0));
+ const arms=[];
+ for(let i=1;i<=6;i++) arms.push(`<span class="rb-exit ${i===ex?'active':''}" style="--i:${i}">${i}</span>`);
+ return `<div class="rb-title">ROUNDABOUT <b>${ex?`EXIT ${ex}`:'FOLLOW ROUTE'}</b></div><div class="rb-diagram"><div class="rb-ring"></div><div class="rb-centre">↻</div>${arms.join('')}</div>`;
 }
 function maneuverArrow(st){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
