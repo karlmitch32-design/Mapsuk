@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — V30 Speed & Navigation Timing Fix</title>
+<title>MUK SATNAV 86 — V31 Full System Fix</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
@@ -45,6 +45,14 @@ function show(x){P.innerHTML=x;P.classList.add('show')} function hide(){P.classL
 function toast(x){TOAST.textContent=x;TOAST.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>TOAST.classList.remove('show'),3000)}
 function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
 function formatDistance(m){if(m<1000)return Math.max(5,Math.round(m/5)*5)+' yd';return (m/1609.344).toFixed(m<16093?1:0)+' mi'}
+function toggleVoice(){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();toast(voiceOn?'Voice guidance on':'Voice guidance off')}
+function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
+function lookAheadCenter(p,h){if(!p)return null;if(h==null)return [p.lat,p.lon];const dist=45,r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
+function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;const vp=document.getElementById('mapViewport');if(vp)vp.style.transform=`scale(1) rotate(${-mapHeading}deg)`;const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform=`rotate(${mapHeading}deg)`;}
+function showRoadAlert(msg){const el=document.getElementById('roadAlert');if(el){el.textContent=msg;el.classList.add('show')}}
+function resetRoadAlert(){const el=document.getElementById('roadAlert');if(el)el.classList.remove('show')}
+function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180,cosLat=Math.cos(meanLat)||1,x1=(a.lon-p.lon)*cosLat,y1=a.lat-p.lat,x2=(b.lon-p.lon)*cosLat,y2=b.lat-p.lat,dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(-x1*dx-y1*dy)/(dx*dx+dy*dy||1))),q={lat:p.lat+y1+t*dy,lon:p.lon+(x1+t*dx)/cosLat};return {d:hav(p,q),q};}
+function updateStats(p){if(!routeMeta)return;const speed=mph(p?.speed||0),lim=speedLimit,rem=p?routeRemaining(p):routeMeta.distance,total=Math.max(1,routeMeta.distance),eta=Math.max(0,Math.round((routeMeta.duration||0)*(rem/total)/60));ST.style.display='flex';ST.innerHTML=`<div class=\"stat\"><b>${speed} mph</b><small>SPEED</small></div><div class=\"stat limit ${lim&&speed>lim+3?'over':''}\"><b>${lim?lim+' mph':(speedLimitLabel||'—')}</b><small>SPEED LIMIT</small></div><div class=\"stat\"><b>${formatDistance(rem)}</b><small>REMAINING</small></div><div class=\"stat\"><b>${eta} min</b><small>ETA</small></div>`;updateSpeedWarning(p?.speed||0);}
 let lastSpokenText='',lastSpokenAt=0;
 function speak(t,priority=false){if(!voiceOn||!('speechSynthesis'in window)||!t)return;const now=Date.now();if(!priority&&t===lastSpokenText&&now-lastSpokenAt<7000)return;if(!priority&&now-lastSpokenAt<900)return;lastSpokenText=t;lastSpokenAt=now;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.96;u.pitch=1;speechSynthesis.speak(u)}catch(e){}}
 function bearing(a,b){const r=Math.PI/180,la=a.lat*r,lb=b.lat*r,dl=(b.lon-a.lon)*r;return (Math.atan2(Math.sin(dl)*Math.cos(lb),Math.cos(la)*Math.sin(lb)-Math.sin(la)*Math.cos(lb)*Math.cos(dl))*180/Math.PI+360)%360}
@@ -106,21 +114,14 @@ async function buildRoute(a,dest,startLive=false){
 }
 function resetNavigationState(){announced={};lastSpokenText='';lastSpokenAt=0;offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;arrivedAnnounced=false;speedChangeState=null;speedChangeFetchedAt=0;speedOverSince=0;speedRingAt=0;trafficLightState={seen:new Set(),lastFetchedAt:0};}
 function routeDistanceToManeuver(p,st){
- const loc=st?.maneuver?.location;
- if(!loc||!routeGeo?.coordinates?.length)return null;
- const near=nearestOnRoute(p), ri=routeIndexForManeuver(st);
- if(near?.point==null||ri==null)return hav(p,{lat:loc[1],lon:loc[0]});
+ const loc=st?.maneuver?.location;if(!loc||!routeGeo?.coordinates?.length)return null;
+ const near=nearestOnRoute(p), target=nearestOnRoute({lat:loc[1],lon:loc[0]});
+ if(!near?.point||!target?.point)return hav(p,{lat:loc[1],lon:loc[0]});
+ if(target.index<near.index || (target.index===near.index && hav(near.point,target.point)<1))return 0;
+ let d=hav(near.point,target.point);
  const cs=routeGeo.coordinates;
- let d=hav(near.point,{lat:cs[Math.min(ri+1,cs.length-1)][1],lon:cs[Math.min(ri+1,cs.length-1)][0]});
- if(near.index<ri){
-   d=0;
-   let cur=near.point;
-   for(let i=near.index;i<=ri && i<cs.length-1;i++){
-     const a=i===near.index?cur:{lat:cs[i][1],lon:cs[i][0]};
-     const b={lat:cs[i+1][1],lon:cs[i+1][0]}; d+=hav(a,b);
-   }
- }else if(near.index>ri){
-   return 0;
+ for(let i=near.index+1;i<=target.index && i<cs.length-1;i++){
+   const a={lat:cs[i][1],lon:cs[i][0]},b={lat:cs[i+1][1],lon:cs[i+1][0]};d+=hav(a,b);
  }
  return Math.max(0,d);
 }
