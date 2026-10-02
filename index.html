@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — V31 Full System Fix</title>
+<title>MUK SATNAV 86 — V32 Professional Navigation System</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#27311e;--nav2:#39452b;--cream:#f7f6ef;--ink:#1a1f17;--muted:#68705f;--route:#2d6cdf;--white:#fff;--shadow:0 6px 24px rgba(0,0,0,.28)}
@@ -22,7 +22,7 @@
 .lane-cue .lane-cue-icon{font-size:34px;line-height:1.05}.lane-cue{position:absolute;left:50%;transform:translateX(-50%);bottom:72px;background:rgba(255,255,255,.96);border-radius:12px;box-shadow:var(--shadow);padding:7px 12px;font-size:34px;font-weight:950;color:var(--nav);display:none;min-width:150px;text-align:center}.lane-cue small{display:block;font-size:9px;letter-spacing:.7px;color:var(--muted);font-weight:900;margin-top:-5px}
 @media(min-width:800px){.panel{width:440px;right:auto}.topbar{left:18px;right:18px}.instruction{left:18px;right:18px}.routebar{left:18px;right:18px}.bottom{left:18px;right:18px}.lane-cue{bottom:82px}}
 .drive-active .topbar{display:none}.start-pulse{width:28px;height:28px;border-radius:50%;background:rgba(255,20,120,.18);border:3px solid #ff1493;box-shadow:0 0 6px #ff1493,0 0 14px #ff1493,0 0 26px rgba(255,20,147,.8);animation:mukPulse 1.15s ease-in-out infinite}@keyframes mukPulse{0%,100%{transform:scale(.72);opacity:.55}50%{transform:scale(1.15);opacity:1}}.neon-route{filter:drop-shadow(0 0 4px currentColor) drop-shadow(0 0 9px currentColor)}.drive-active .leaflet-control-attribution{opacity:.75}.road-alert{display:none;position:absolute;z-index:1450;left:50%;transform:translateX(-50%);top:132px;background:#fff5d9;color:#6b4b00;border:2px solid #e3bd52;border-radius:12px;padding:9px 13px;box-shadow:var(--shadow);font-weight:900}.road-alert.show{display:block}</style>
-<meta name="muk-version" content="V30 Speed & Navigation Timing Fix"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data."></head>
+<meta name="muk-version" content="V32 Professional Navigation System"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data."></head>
 <body>
 <div id="app">
 <div id="mapViewport"><div id="map"></div></div>
@@ -45,6 +45,7 @@ function show(x){P.innerHTML=x;P.classList.add('show')} function hide(){P.classL
 function toast(x){TOAST.textContent=x;TOAST.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>TOAST.classList.remove('show'),3000)}
 function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice on':'🔇 Voice off'}</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
 function formatDistance(m){if(m<1000)return Math.max(5,Math.round(m/5)*5)+' yd';return (m/1609.344).toFixed(m<16093?1:0)+' mi'}
+function armAudio(){try{const AC=window.AudioContext||window.webkitAudioContext;if(AC){audioCtx=audioCtx||new AC();if(audioCtx.state==='suspended')audioCtx.resume();}}catch(e){}}
 function toggleVoice(){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();toast(voiceOn?'Voice guidance on':'Voice guidance off')}
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
 function lookAheadCenter(p,h){if(!p)return null;if(h==null)return [p.lat,p.lon];const dist=45,r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
@@ -66,7 +67,7 @@ function maneuverLabel(st){
  const idx=routeSteps.indexOf(st),commercial=commercialInstruction(st,idx);
  if(commercial)return commercial;
  if(t==='depart')return 'Continue ahead';
- if(t==='roundabout'||t==='rotary'){const ex=m.exit||st?.exit;if(ex)return `Take the ${ordinal(ex)} exit`;return 'Take the roundabout';}
+ if(t==='roundabout'||t==='rotary'||t==='exit roundabout'){const ex=m.exit||st?.exit||st?.maneuver?.exit;if(ex)return `Take the ${ordinal(Number(ex))} exit`;return 'Take the roundabout';}
  if(t==='fork')return mod==='left'?'Keep left':'Keep right';
  if(t==='merge')return mod==='left'?'Merge left':'Merge right';
  if(t==='on ramp')return mod==='left'?'Keep left and take the slip road':mod==='right'?'Keep right and take the slip road':'Take the slip road';
@@ -74,7 +75,7 @@ function maneuverLabel(st){
  if(t==='new name')return 'Continue';
  if(mod==='left')return 'Turn left';if(mod==='right')return 'Turn right';if(mod==='slight left')return 'Keep left';if(mod==='slight right')return 'Keep right';if(mod==='sharp left')return 'Turn sharp left';if(mod==='sharp right')return 'Turn sharp right';return 'Continue ahead';
 }
-function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+function ordinal(n){n=Number(n)||1;const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
 function stepDistance(st){return Math.max(0,st?st._distance||st.distance||0:0)}
 function roadName(st){return st?.name||st?.ref||''}
 async function geo(q){const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=6&q='+encodeURIComponent(q));if(!r.ok)throw Error('Search service unavailable');return r.json()}
@@ -94,12 +95,13 @@ function updateRouteColour(p){if(!routeLayer||!routeMeta)return;const rem=routeR
 function updateStartPulse(p){if(!routeGeo)return;const n=nearestOnRoute(p);if(!n.point)return;if(!startPulse){startPulse=L.marker([n.point.lat,n.point.lon],{icon:L.divIcon({className:'',html:'<div class="start-pulse"></div>',iconSize:[28,28],iconAnchor:[14,14]}),interactive:false,zIndexOffset:900}).addTo(map)}else startPulse.setLatLng([n.point.lat,n.point.lon]);}
 async function requestWakeLock(){if(!('wakeLock' in navigator)||!driveMode)return;try{if(wakeLock&&!wakeLock.released)return;wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null});}catch(e){wakeLock=null}}
 async function buildRoute(a,dest,startLive=false){
+ armAudio();
  const u=`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson&steps=true&annotations=true`;
  const r=await fetch(u);if(!r.ok)throw Error('Routing service unavailable');
  const j=await r.json();if(j.code!=='Ok')throw Error('No driving route found');
  const rt=j.routes[0];routeMeta={distance:rt.distance,duration:rt.duration};routeGeo=rt.geometry;
  routeSteps=(rt.legs||[]).flatMap(l=>l.steps||[]);routeSteps.forEach((st,i)=>enrichStep(st,i));stepIndex=0;let cum=0;routeCum=[0];
- routeSteps.forEach(s=>{s._startDist=cum;s._distance=s.distance||0;cum+=s.distance||0});for(let i=1;i<routeGeo.coordinates.length;i++){const a=routeGeo.coordinates[i-1],b=routeGeo.coordinates[i];cum=routeCum[i-1]+hav({lat:a[1],lon:a[0]},{lat:b[1],lon:b[0]});routeCum[i]=cum;}
+ routeSteps.forEach(s=>{s._startDist=cum;s._distance=s.distance||0;cum+=s.distance||0});for(let i=1;i<routeGeo.coordinates.length;i++){const a=routeGeo.coordinates[i-1],b=routeGeo.coordinates[i];cum=routeCum[i-1]+hav({lat:a[1],lon:a[0]},{lat:b[1],lon:b[0]});routeCum[i]=cum;} annotateManeuverProgress();
  if(routeLayer)map.removeLayer(routeLayer);routeLayer=L.geoJSON(rt.geometry,{style:{color:'#ff1744',weight:8,opacity:.98,className:'neon-route'}}).addTo(map);if(startPulse){map.removeLayer(startPulse);startPulse=null}
  if(destMarker)destMarker.setLatLng([dest.lat,dest.lon]);else destMarker=L.marker([dest.lat,dest.lon]).addTo(map);
  if(!myMarker)myMarker=L.marker([a.lat,a.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([a.lat,a.lon]);
@@ -113,24 +115,46 @@ async function buildRoute(a,dest,startLive=false){
  speak('Route planned. '+formatDistance(rt.distance)+' to go.');
 }
 function resetNavigationState(){announced={};lastSpokenText='';lastSpokenAt=0;offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;arrivedAnnounced=false;speedChangeState=null;speedChangeFetchedAt=0;speedOverSince=0;speedRingAt=0;trafficLightState={seen:new Set(),lastFetchedAt:0};}
-function routeDistanceToManeuver(p,st){
- const loc=st?.maneuver?.location;if(!loc||!routeGeo?.coordinates?.length)return null;
- const near=nearestOnRoute(p), target=nearestOnRoute({lat:loc[1],lon:loc[0]});
- if(!near?.point||!target?.point)return hav(p,{lat:loc[1],lon:loc[0]});
- if(target.index<near.index || (target.index===near.index && hav(near.point,target.point)<1))return 0;
- let d=hav(near.point,target.point);
- const cs=routeGeo.coordinates;
- for(let i=near.index+1;i<=target.index && i<cs.length-1;i++){
-   const a={lat:cs[i][1],lon:cs[i][0]},b={lat:cs[i+1][1],lon:cs[i+1][0]};d+=hav(a,b);
- }
- return Math.max(0,d);
+function routeProgress(p){
+ if(!routeGeo?.coordinates?.length||!routeCum.length)return 0;
+ const n=nearestOnRoute(p);
+ if(!n.point)return 0;
+ const cs=routeGeo.coordinates,i=Math.max(0,Math.min(n.index,cs.length-2));
+ const a={lat:cs[i][1],lon:cs[i][0]},b={lat:cs[i+1][1],lon:cs[i+1][0]},seg=hav(a,b),part=seg?hav(a,n.point)/seg:0;
+ return Math.max(0,(routeCum[i]||0)+Math.min(1,Math.max(0,part))*seg);
 }
-function distanceToStep(p,st){
- const along=routeDistanceToManeuver(p,st);
- if(along!=null)return along;
+function maneuverProgress(st){return Number.isFinite(st?._routeProgress)?st._routeProgress:null}
+function routeDistanceToManeuver(p,st){
+ const target=maneuverProgress(st),cur=routeProgress(p);
+ if(target!=null)return Math.max(0,target-cur);
  const loc=st?.maneuver?.location;if(loc)return hav(p,{lat:loc[1],lon:loc[0]});
  return stepDistance(st);
 }
+function distanceToStep(p,st){return routeDistanceToManeuver(p,st)}
+function indexNearLocation(loc,startIndex=0){
+ if(!loc||!routeGeo?.coordinates?.length)return null;
+ const cs=routeGeo.coordinates;let best={d:Infinity,index:0,point:null};
+ const begin=Math.max(0,Math.min(startIndex,cs.length-2));
+ for(let i=begin;i<cs.length-1;i++){
+  const a={lat:cs[i][1],lon:cs[i][0]},b={lat:cs[i+1][1],lon:cs[i+1][0]};
+  const z=roadSegmentDistance({lat:loc[1],lon:loc[0]},a,b);
+  if(z.d<best.d)best={d:z.d,index:i,point:z.q};
+  if(i>begin+80&&z.d>best.d+120)break;
+ }
+ return best;
+}
+function annotateManeuverProgress(){
+ let start=0;
+ for(const st of routeSteps){
+  const loc=st?.maneuver?.location,hit=indexNearLocation(loc,start);
+  if(hit){
+   const cs=routeGeo.coordinates,i=hit.index,a={lat:cs[i][1],lon:cs[i][0]},b={lat:cs[i+1][1],lon:cs[i+1][0]},seg=hav(a,b),part=seg?hav(a,hit.point)/seg:0;
+   st._routeIndex=i;st._routeProgress=(routeCum[i]||0)+Math.min(1,Math.max(0,part))*seg;
+   start=i;
+  }
+ }
+}
+
 function mph(v){return Math.max(0,Math.round(v*2.236936));}
 function parseSpeedLimit(v){
  if(v==null)return null;
@@ -161,6 +185,7 @@ function speedLimitFromTags(t,travelHeading,segA,segB){
  const hw=String(tags.highway||'').toLowerCase();
  if(hw==='motorway')return {limit:70,label:'70 mph',source:'national-road-class'};
  if(String(tags.dual_carriageway||'').toLowerCase()==='yes')return {limit:70,label:'70 mph',source:'national-dual'};
+ if(String(tags.motorroad||'').toLowerCase()==='yes')return {limit:70,label:'70 mph',source:'national-motorroad'};
  return {limit:null,label:'—',source:'unknown'};
 }
 function currentRouteHints(){
@@ -175,6 +200,7 @@ function candidateScore(c,p,hints){
  if(hints.name && name && name===hints.name)score-=70;
  if(hints.nextRef && ref && ref===hints.nextRef)score-=30;
  if(hints.nextName && name && name===hints.nextName)score-=20;
+ if(c.headingPenalty>100)score+=250;
  return score;
 }
 function selectSpeedCandidate(elements,p,travelHeading){
@@ -183,7 +209,7 @@ function selectSpeedCandidate(elements,p,travelHeading){
  for(const w of (elements||[])){
   const g=w.geometry||[];for(let i=1;i<g.length;i++){
    const a={lat:g[i-1].lat,lon:g[i-1].lon},b={lat:g[i].lat,lon:g[i].lon};
-   const z=roadSegmentDistance(p,a,b);if(z.d>95)continue;
+   const z=roadSegmentDistance(p,a,b);if(z.d>120)continue;
    const rb=bearing(a,b), reverse=String(w.tags?.oneway||'').toLowerCase()==='-1', roadBearing=reverse?(rb+180)%360:rb;
    const hp=travelHeading==null?0:angleDiff(travelHeading,roadBearing);
    let routePenalty=0;
@@ -193,7 +219,7 @@ function selectSpeedCandidate(elements,p,travelHeading){
  }
  for(const c of out)c.score=candidateScore(c,p,hints);
  out.sort((a,b)=>a.score-b.score);
- return out.find(c=>c.headingPenalty<70)||out[0]||null;
+ return out.find(c=>c.headingPenalty<55)||out[0]||null;
 }
 async function overpassJson(query){
  const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
@@ -203,7 +229,7 @@ async function overpassJson(query){
  return null;
 }
 async function speedLimitCheck(p){
- if(Date.now()-speedLimitFetchedAt<3500)return;
+ if(Date.now()-speedLimitFetchedAt<2200)return;
  speedLimitFetchedAt=Date.now();
  try{
   const ahead=routePointAhead(p,85)||p;
@@ -219,17 +245,23 @@ async function speedLimitCheck(p){
  }catch(e){/* retain last confirmed limit during temporary data failure */}
 }
 function speedChangeRing(){
- if(Date.now()-speedRingAt<7000)return;speedRingAt=Date.now();
- try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC(),now=ctx.currentTime,gain=ctx.createGain();gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.16,now+.02);gain.gain.exponentialRampToValueAtTime(.0001,now+.42);gain.connect(ctx.destination);const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(880,now);o.frequency.exponentialRampToValueAtTime(660,now+.18);o.connect(gain);o.start(now);o.stop(now+.44);setTimeout(()=>{try{ctx.close()}catch(e){}},700)}catch(e){}
+ if(Date.now()-speedRingAt<3500)return;speedRingAt=Date.now();
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  audioCtx=audioCtx||new AC();if(audioCtx.state==='suspended')audioCtx.resume();
+  const now=audioCtx.currentTime,g=audioCtx.createGain();g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.22,now+.025);g.gain.exponentialRampToValueAtTime(.0001,now+.48);g.connect(audioCtx.destination);
+  const o=audioCtx.createOscillator();o.type='sine';o.frequency.setValueAtTime(1040,now);o.frequency.exponentialRampToValueAtTime(720,now+.18);o.connect(g);o.start(now);o.stop(now+.5);
+ }catch(e){}
 }
+
 function updateSpeedWarning(speed){
  const el=document.getElementById('speedWarning');
  if(!speedLimit||speed<1){el.classList.remove('show');speedOverSince=0;return}
- const over=speed>speedLimit+3;
+ const over=speed>speedLimit+1;
  if(over){
    if(!speedOverSince)speedOverSince=Date.now();
    const activeFor=Date.now()-speedOverSince;
-   if(activeFor>=1500){
+   if(activeFor>=900){
      el.textContent=`MATE, YOU'RE OVER THE SPEED LIMIT — ${mph(speed)} mph / ${speedLimit} mph. SLOW DOWN`;
      el.classList.add('show');
      if(Date.now()-speedRingAt>=4000){
@@ -308,19 +340,11 @@ async function onPosition(pos){
  await speedLimitCheck(p);await checkUpcomingSpeedChange(p);await checkTrafficLights(p);updateStats(p);
  if(!routeSteps.length)return;await navigationEngine(p);
 }
-function isRoundaboutStep(st){const t=st?.maneuver?.type||'';return t==='roundabout'||t==='rotary';}
-function routeIndexForManeuver(st){
- const loc=st?.maneuver?.location;if(!loc||!routeGeo?.coordinates?.length)return null;
- let best={d:Infinity,index:0};
- for(let i=0;i<routeGeo.coordinates.length-1;i++){
-  const q=roadSegmentDistance({lat:loc[1],lon:loc[0]},{lat:routeGeo.coordinates[i][1],lon:routeGeo.coordinates[i][0]},{lat:routeGeo.coordinates[i+1][1],lon:routeGeo.coordinates[i+1][0]});
-  if(q.d<best.d)best={d:q.d,index:i};
- }
- return best.index;
-}
+function isRoundaboutStep(st){const t=st?.maneuver?.type||'';return t==='roundabout'||t==='rotary'||t==='exit roundabout';}
+function routeIndexForManeuver(st){return Number.isFinite(st?._routeIndex)?st._routeIndex:null}
 function hasPassedManeuver(p,st){
- const ri=routeIndexForManeuver(st),near=nearestOnRoute(p);if(ri==null||!near)return false;
- return near.index>ri+2 && distanceToStep(p,st)>28;
+ const target=maneuverProgress(st);if(target==null)return false;
+ return routeProgress(p)>target+12;
 }
 function sameJunctionAfterRoundabout(index){
  const prev=routeSteps[index-1],cur=routeSteps[index];
@@ -386,7 +410,6 @@ function navigationEngine(p){
  let st=routeSteps[stepIndex]; if(!st)return;
  let distTo=distanceToStep(p,st), type=st.maneuver?.type||'';
  // Do not announce a following generic turn as part of the roundabout exit.
- if(sameJunctionAfterRoundabout(stepIndex)&&distTo<90){ renderDrive(p); return; }
  // Advance when the manoeuvre is reached OR when GPS has already carried the
  // vehicle beyond its route geometry. This prevents a missed junction from
  // leaving the navigator stuck on the previous instruction after a GPS jump.
@@ -397,7 +420,6 @@ function navigationEngine(p){
     while(stepIndex<routeSteps.length-1&&!actionableStep(routeSteps[stepIndex]))stepIndex++;
    }while(stepIndex<routeSteps.length-1&&guard<4&&hasPassedManeuver(p,routeSteps[stepIndex]));
    const n=routeSteps[stepIndex],key='step'+stepIndex;
-   if(isRoundaboutStep(routeSteps[oldIndex]) && sameJunctionAfterRoundabout(stepIndex)){ renderDrive(p); return; }
    if(!announced[key]){announced[key]=1;speak(announcementForStep(n));}
    renderDrive(p); return;
  }
@@ -421,14 +443,14 @@ function manner(st){return maneuverLabel(st).toLowerCase()}
 function mannerRoundabout(st){const ex=st.maneuver?.exit;return ex?`take the ${ordinal(ex)} exit`:'take the correct exit'}
 function preparationForStep(st,d){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'',idx=routeSteps.indexOf(st),commercial=commercialInstruction(st,idx);
- if(commercial){if(isRoundaboutStep(st)){const ex=st.maneuver?.exit;return ex?`Roundabout ahead in ${formatDistance(d)}. Take the ${ordinal(ex)} exit.`:`Roundabout ahead in ${formatDistance(d)}.`;}return `${commercial} in ${formatDistance(d)}.`;}
- if(isRoundaboutStep(st)){const ex=st.maneuver?.exit;return ex?`Roundabout ahead in ${formatDistance(d)}. Take the ${ordinal(ex)} exit.`:`Roundabout ahead in ${formatDistance(d)}.`;}
+ if(commercial){if(isRoundaboutStep(st)){const ex=st.maneuver?.exit||st?.exit;if(ex)return `Roundabout ahead in ${formatDistance(d)}. Prepare for the ${ordinal(ex)} exit.`;return `Roundabout ahead in ${formatDistance(d)}.`;}return `${commercial} in ${formatDistance(d)}.`;}
+ if(isRoundaboutStep(st)){const ex=st.maneuver?.exit||st?.exit;if(ex)return `Roundabout ahead in ${formatDistance(d)}. Prepare for the ${ordinal(ex)} exit.`;return `Roundabout ahead in ${formatDistance(d)}.`;}
  if(t==='turn')return `${m==='left'?'Left':m==='right'?'Right':'Next'} turn ahead in ${formatDistance(d)}.`;
  return `${m==='left'?'Left':m==='right'?'Right':'Next'} junction ahead in ${formatDistance(d)}.`;
 }
 function immediateForStep(st){
  const idx=routeSteps.indexOf(st),commercial=commercialInstruction(st,idx),t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
- if(isRoundaboutStep(st))return mannerRoundabout(st);
+ if(isRoundaboutStep(st)){const ex=st.maneuver?.exit||st?.exit;return ex?`take the ${ordinal(ex)} exit now`:'take the roundabout now';}
  if(commercial)return commercial;
  if(t==='on ramp'||t==='off ramp')return m==='left'?'Keep left and take the slip road now.':m==='right'?'Keep right and take the slip road now.':'Take the slip road now.';
  return `${m==='left'?'Turn left':m==='right'?'Turn right':'Continue ahead'} now.`;
