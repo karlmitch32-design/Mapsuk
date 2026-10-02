@@ -51,6 +51,7 @@ function bearing(a,b){const r=Math.PI/180,la=a.lat*r,lb=b.lat*r,dl=(b.lon-a.lon)
 function setMapRotation(h){if(!driveMode||!Number.isFinite(h))return;const d=((h%360)+360)%360;mapHeading=d;const vp=document.getElementById('mapViewport');if(vp)vp.style.transform=`scale(1) rotate(${-d}deg)`;const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform=`rotate(${d}deg)`;}
 window.setMapRotation=setMapRotation;
 window.lookAheadCenter=lookAheadCenter;
+window.__MUK_BUILD="V32";
 function lookAheadCenter(p,heading,meters=140){if(!p||!Number.isFinite(p.lat)||!Number.isFinite(p.lon))return p;const h=(Number.isFinite(heading)?heading:0)*Math.PI/180;const d=Number.isFinite(meters)?meters:140;const lat=p.lat+(Math.cos(h)*d/111320);const cosLat=Math.max(0.2,Math.cos(p.lat*Math.PI/180));const lon=p.lon+(Math.sin(h)*d/(111320*cosLat));return {lat,lon}}
 function angleDiff(a,b){let d=Math.abs(a-b)%360;return d>180?360-d:d}
 function hav(a,b){const R=6371000,r=Math.PI/180,d1=(b.lat-a.lat)*r,d2=(b.lon-a.lon)*r,x=Math.sin(d1/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(d2/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
@@ -223,15 +224,19 @@ function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navi
 function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();document.getElementById('mapViewport').style.transform='scale(1) rotate(0deg)';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
 function recenter(){if(lastPos){const c=lookAheadCenter(lastPos,lastPos.heading);map.setView(c,17,{animate:false});setMapRotation(lastPos.heading)}}
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
-async function onPosition(pos){
+let gpsFixCount=0,lastGpsFixAt=0,roadDataBusy=false,speedChangeBusy=false;
+function onPosition(pos){
  const p={lat:pos.coords.latitude,lon:pos.coords.longitude};p.accuracy=pos.coords.accuracy||999;p.speed=Number.isFinite(pos.coords.speed)?Math.max(0,pos.coords.speed):0;
- const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:(lastPos?bearing(lastPos,p):null);p.heading=smoothHeading(lastPos?.heading,rawHeading);lastPos=p;
+ const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:(lastPos?bearing(lastPos,p):null);p.heading=smoothHeading(lastPos?.heading,rawHeading);lastPos=p;gpsFixCount++;lastGpsFixAt=Date.now();
  const near=nearestOnRoute(p); const snapped=(near.point&&near.d<65)?near.point:{lat:p.lat,lon:p.lon};
  if(!myMarker)myMarker=L.marker([snapped.lat,snapped.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([snapped.lat,snapped.lon]);
  let navHeading=p.heading; if((p.speed<2||navHeading==null)&&routeGeo){navHeading=routeBearingAt(near.index);} if(navHeading!=null){setMapRotation(navHeading);const c=lookAheadCenter(snapped,navHeading);map.setView(c,Math.max(16,map.getZoom()),{animate:false});}
- updateStartPulse(p);updateRouteColour(p);requestWakeLock();
- await speedLimitCheck(p);await checkUpcomingSpeedChange(p);updateStats(p);
- if(!routeSteps.length)return;await navigationEngine(p);
+ updateStartPulse(p);updateRouteColour(p);updateStats(p);requestWakeLock();
+ // Never block the live GPS/render loop on Overpass or other external services.
+ if(!roadDataBusy){roadDataBusy=true;speedLimitCheck(p).catch(()=>{}).finally(()=>{roadDataBusy=false})}
+ if(!speedChangeBusy){speedChangeBusy=true;checkUpcomingSpeedChange(p).catch(()=>{}).finally(()=>{speedChangeBusy=false})}
+ if(!routeSteps.length)return;
+ Promise.resolve(navigationEngine(p)).catch(()=>{});
 }
 function isRoundaboutStep(st){const t=st?.maneuver?.type||'';return t==='roundabout'||t==='rotary';}
 function routeIndexForManeuver(st){
