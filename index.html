@@ -3,34 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — V35 SLICK UK NAVIGATION</title>
+<title>MUK SATNAV 86 — EPIC UK DRIVER NAVIGATION</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#172019;--nav2:#2f4935;--lime:#c9f36a;--cyan:#48e5ff;--cream:#f7f8f3;--ink:#101711;--muted:#9da99c;--white:#fff;--danger:#ff4d55;--glass:rgba(10,16,12,.84);--shadow:0 12px 34px rgba(0,0,0,.34)}
 *{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#080b09;color:var(--ink);overflow:hidden}button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;font-weight:850;background:var(--nav);color:#fff}button.secondary{background:#e9eee6;color:var(--nav)}button.danger{background:#f1dfdb;color:#8d352b}
-#mapViewport{position:absolute;left:-50%;top:-50%;width:200%;height:200%;z-index:1;overflow:hidden;transform-origin:50% 50%;will-change:transform;background:#dfe7dc;contain:paint}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
+#mapViewport{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;contain:paint;transform:none!important;will-change:auto}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;transform:none!important;transform-origin:center center;will-change:auto}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
 
 /* PRE-DRIVE LAUNCHER */
-.topbar{position:absolute;z-index:1200;top:14px;left:14px;right:14px;display:flex;gap:10px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(15,23,17,.94);color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.5px;display:flex;align-items:center;gap:8px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--lime);color:#172019;font-size:15px}.searchbox{position:relative;z-index:10000;flex:1;display:flex;align-items:center;gap:6px;background:rgba(250,252,247,.97);padding:6px 7px;border-radius:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.65)}.searchbox input{flex:1;border:0;outline:0;padding:9px 7px;min-width:0;background:transparent;font-weight:650}.searchbox button{background:var(--nav2);padding:9px 15px}.search-icon{font-size:25px;color:#536152;padding-left:6px}
+.topbar{position:absolute;z-index:1200;top:14px;left:14px;right:14px;display:flex;gap:10px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(15,23,17,.94);color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.5px;display:flex;align-items:center;gap:8px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--lime);color:#172019;font-size:15px}.searchbox{flex:1;display:flex;align-items:center;gap:6px;background:rgba(250,252,247,.97);padding:6px 7px;border-radius:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.65)}.searchbox input{flex:1;border:0;outline:0;padding:9px 7px;min-width:0;background:transparent;font-weight:650}.searchbox button{background:var(--nav2);padding:9px 15px}.search-icon{font-size:25px;color:#536152;padding-left:6px}
 /* DRIVING COCKPIT — map is background, guidance is the product */
 .drive-ui{position:absolute;z-index:1300;left:0;right:0;top:0;bottom:0;pointer-events:none;display:none}.drive-ui>*{pointer-events:auto}.cockpit-head{position:absolute;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:9px}.cockpit-brand,.destination-chip,.drive-status{background:var(--glass);color:#fff;border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(12px);box-shadow:var(--shadow)}.cockpit-brand{display:flex;align-items:center;gap:7px;border-radius:14px;padding:7px 10px;font-weight:900;letter-spacing:.35px}.cockpit-brand .brand-mark{width:25px;height:25px;font-size:13px}.destination-chip{min-width:0;flex:1;border-radius:14px;padding:6px 12px;overflow:hidden}.destination-chip small{display:block;color:#a9b4a8;font-size:8px;font-weight:850;letter-spacing:1px}.destination-chip b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.drive-status{border-radius:14px;padding:10px 11px;font-size:9px;font-weight:950;letter-spacing:.7px;display:flex;gap:6px;align-items:center}.gps-dot{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime)}
 .instruction{position:absolute;top:68px;left:12px;right:12px;margin:0;background:linear-gradient(135deg,rgba(9,15,11,.94),rgba(24,38,28,.91));color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:20px;box-shadow:var(--shadow);min-height:104px;padding:12px 15px;display:flex;align-items:center;gap:13px;border-left:5px solid var(--lime);backdrop-filter:blur(14px)}.arrow{font-size:58px;line-height:1;color:var(--lime);width:78px;min-width:78px;text-align:center;font-weight:950;text-shadow:0 0 18px rgba(201,243,106,.2)}.roundabout-svg{width:88px;height:88px;overflow:visible}.roundabout-svg .ring{fill:rgba(255,255,255,.03);stroke:#d8e0d5;stroke-width:9}.roundabout-svg .road{fill:none;stroke:#78877a;stroke-width:5;stroke-linecap:round}.roundabout-svg .active{stroke:var(--cyan);stroke-width:8;filter:drop-shadow(0 0 5px var(--cyan))}.roundabout-svg text{font-size:9px;font-weight:950;fill:#fff}.ins-main{flex:1;min-width:0}.ins-main .big{font-size:23px;font-weight:950;line-height:1.05;text-transform:uppercase;letter-spacing:.2px}.ins-main .sub{font-size:12px;color:#aeb8ad;margin-top:6px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.distance{font-size:27px;font-weight:950;white-space:nowrap;color:var(--lime)}
 .routebar{position:absolute;top:181px;left:12px;right:12px;margin:0;background:rgba(7,12,9,.82);color:#fff;border:1px solid rgba(255,255,255,.11);border-radius:13px;box-shadow:var(--shadow);padding:8px 12px;display:flex;gap:14px;align-items:center;overflow:hidden;backdrop-filter:blur(10px)}.routebar span{font-size:10px;white-space:nowrap}.routebar b{font-size:12px}.routebar .nextroad{font-weight:850;flex:1;overflow:hidden;text-overflow:ellipsis;color:#dce5da}
-.bottom{position:absolute;z-index:1300;left:12px;right:12px;bottom:12px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}.bottom>*{pointer-events:auto}.stats{display:flex;align-items:center;gap:0;background:rgba(8,13,10,.9);color:#fff;border:1px solid rgba(255,255,255,.13);padding:5px;border-radius:16px;box-shadow:var(--shadow);backdrop-filter:blur(12px)}.stat{min-width:78px;padding:5px 9px;border-right:1px solid rgba(255,255,255,.12)}.stat:last-child{border-right:0}.stat b{display:block;font-size:16px}.stat.limit b{font-size:16px;color:var(--lime)}.stat.limit.over b{color:var(--danger)}.stat small{color:#9da99c;font-size:8px;font-weight:800;letter-spacing:.7px}.controls{display:flex;gap:8px}.round{width:46px;height:46px;padding:0;border-radius:15px;box-shadow:var(--shadow);background:rgba(8,13,10,.9);border:1px solid rgba(255,255,255,.13);color:#fff;font-size:20px}
+.bottom{position:absolute;z-index:1300;left:12px;right:12px;bottom:12px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}.bottom>*{pointer-events:auto}.stats{display:flex;align-items:center;gap:0;background:rgba(8,13,10,.9);color:#fff;border:1px solid rgba(255,255,255,.13);padding:5px;border-radius:16px;box-shadow:var(--shadow);backdrop-filter:blur(12px)}.stat{min-width:78px;padding:5px 9px;border-right:1px solid rgba(255,255,255,.12)}.stat:last-child{border-right:0}.stat b{display:block;font-size:16px}.stat.limit b{font-size:18px;color:var(--lime)}.stat.limit.over b{color:var(--danger)}.stat small{color:#9da99c;font-size:8px;font-weight:800;letter-spacing:.7px}.controls{display:flex;gap:8px}.round{width:46px;height:46px;padding:0;border-radius:15px;box-shadow:var(--shadow);background:rgba(8,13,10,.9);border:1px solid rgba(255,255,255,.13);color:#fff;font-size:20px}
 .speed-warning{display:none;position:absolute;z-index:1450;top:181px;left:50%;transform:translateX(-50%);background:var(--danger);color:#fff;border-radius:13px;padding:10px 15px;box-shadow:var(--shadow);font-weight:950;border:1px solid rgba(255,255,255,.35)}.speed-warning.show{display:block}.junction-state{display:none;position:absolute;z-index:1450;top:225px;left:50%;transform:translateX(-50%);background:rgba(7,12,9,.94);color:#fff;border:1px solid var(--cyan);border-radius:12px;padding:8px 13px;box-shadow:0 0 20px rgba(72,229,255,.18);font-weight:900;text-align:center;min-width:190px}.junction-state.show{display:block}.panel{position:absolute;z-index:1400;left:12px;right:12px;bottom:74px;background:#fff;border-radius:18px;padding:14px;box-shadow:var(--shadow);max-height:62%;overflow:auto;display:none}.panel.show{display:block}.small{font-size:12px;color:#667164;line-height:1.45}.notice{background:#f3f6ee;border:1px solid #dce3d5;padding:10px;border-radius:11px;margin-top:9px}.item{padding:11px 0;border-bottom:1px solid #e4e8e0}.actions{display:flex;gap:7px;margin-top:9px}.actions button{flex:1}.row{display:flex;gap:7px}.row>*{flex:1}.toast{position:absolute;z-index:1500;left:50%;transform:translateX(-50%);bottom:82px;background:#111912;color:#fff;padding:10px 15px;border-radius:13px;box-shadow:var(--shadow);display:none;font-weight:800;border:1px solid rgba(201,243,106,.22)}.toast.show{display:block}.menu{position:absolute;z-index:1401;right:12px;bottom:74px;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:7px;display:none;width:220px}.menu.show{display:block}.menu button{width:100%;margin:2px 0;text-align:left;background:#fff;color:var(--ink)}.menu button:hover{background:#edf2e9}
 .lane-cue .lane-cue-icon{font-size:36px;line-height:1.05}.lane-cue{position:absolute;left:50%;transform:translateX(-50%);bottom:82px;background:rgba(8,13,10,.92);border:1px solid rgba(72,229,255,.35);border-radius:15px;box-shadow:var(--shadow);padding:8px 14px;font-size:35px;font-weight:950;color:var(--cyan);display:none;min-width:155px;text-align:center;backdrop-filter:blur(10px)}.lane-cue small{display:block;font-size:8px;letter-spacing:.9px;color:#aeb8ad;font-weight:900;margin-top:-5px}
 @media(min-width:800px){.panel{width:440px;right:auto}.topbar{left:20px;right:20px}.cockpit-head{left:20px;right:20px}.instruction{left:20px;right:20px}.routebar{left:20px;right:20px}.bottom{left:20px;right:20px}.lane-cue{bottom:92px}}
 .drive-active .topbar{display:none}.drive-active #mapViewport{filter:saturate(.82) brightness(.96)}.drive-active .leaflet-control-attribution{opacity:.65}.start-pulse{width:24px;height:24px;border-radius:50%;background:rgba(22,131,255,.18);border:3px solid #1683ff;box-shadow:0 0 8px rgba(22,131,255,.55);animation:mukPulse 1.15s ease-in-out infinite}@keyframes mukPulse{0%,100%{transform:scale(.72);opacity:.55}50%{transform:scale(1.15);opacity:1}}.pro-route{filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}.road-alert{display:none;position:absolute;z-index:1450;left:50%;transform:translateX(-50%);top:225px;background:#fff5d9;color:#6b4b00;border:2px solid #e3bd52;border-radius:12px;padding:9px 13px;box-shadow:var(--shadow);font-weight:900}.road-alert.show{display:block}
+.safety-badge{position:absolute;z-index:1450;left:12px;right:12px;top:275px;display:none;justify-content:center;pointer-events:none}.safety-badge.show{display:flex}.safety-badge span{max-width:min(92vw,520px);background:rgba(7,12,9,.94);color:#fff;border:1px solid rgba(201,243,106,.38);border-radius:12px;padding:8px 12px;box-shadow:var(--shadow);font-size:11px;font-weight:900;text-align:center}.camera-alert span{border-color:rgba(255,210,80,.7)}.weather-alert span{border-color:rgba(72,229,255,.65)}
 @media(max-width:520px){.cockpit-brand span:last-child{display:none}.cockpit-brand{padding:7px}.destination-chip{padding:6px 9px}.instruction{top:64px;min-height:96px;padding:9px 11px;gap:8px}.arrow{font-size:48px;width:61px;min-width:61px}.roundabout-svg{width:74px;height:74px}.ins-main .big{font-size:19px}.ins-main .sub{font-size:10px}.distance{font-size:23px}.routebar{top:164px}.stats{max-width:calc(100% - 54px);overflow:hidden}.stat{min-width:64px;padding:4px 7px}.stat:nth-child(3){display:none}.stat b{font-size:14px}.stat.limit b{font-size:16px}.bottom{bottom:9px}.round{width:43px;height:43px}}
 </style>
-<meta name="muk-version" content="V35 Slick UK Navigation"><meta name="muk-data" content="OSM road network + UK speed rules + Overpass traffic signals + official UK road-data architecture"><meta name="muk-ui" content="professional cockpit, no-neon, full-bleed map, direction-up/north-up"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data.">
-<style id="muk-v37-address-fix">
-.searchbox{width:min(280px,calc(100vw - 32px))!important;max-width:280px!important;z-index:10000!important;pointer-events:auto!important}
-.searchbox input,.searchbox textarea,.searchbox button{pointer-events:auto!important;touch-action:manipulation}
-.searchbox input{width:100%!important;box-sizing:border-box!important;min-height:42px!important;font-size:16px!important;padding:9px 12px!important}
-.searchbox button{min-height:40px!important}
-</style>
-</head>
+<meta name="muk-version" content="EPIC-CLEAN-MAP-CAMERA-UK-SAFETY">
+<meta name="muk-version-original" content="V35 Slick UK Navigation"><meta name="muk-data" content="OSM road network + UK speed rules + Overpass traffic signals + official UK road-data architecture"><meta name="muk-ui" content="professional cockpit, no-neon, full-bleed map, direction-up/north-up"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data."></head>
 <body>
 <div id="app">
 <div id="mapViewport"><div id="map"></div></div>
@@ -43,7 +38,7 @@
   <div id="junctionState" class="junction-state"></div>
 </div>
 <div id="panel" class="panel"></div>
-<div id="toast" class="toast"></div><div id="speedWarning" class="speed-warning"></div><div id="roadAlert" class="road-alert"></div>
+<div id="toast" class="toast"></div><div id="speedWarning" class="speed-warning"></div><div id="roadAlert" class="road-alert"></div><div id="safetyBadge" class="safety-badge"><span id="safetyText"></span></div>
 <div id="menu" class="menu"></div>
 <div class="bottom"><div id="stats" class="stats" style="display:none"></div><div class="controls"><button id="recenter" class="round" onclick="recenter()" title="Recenter">⌖</button><button id="orientBtn" class="round" onclick="toggleOrientation()" title="Direction up / North up">▲</button><button class="round" onclick="toggleMenu()" title="Menu">☰</button></div></div>
 </div>
@@ -52,20 +47,67 @@
 const map=L.map('map',{zoomControl:true,zoomControlPosition:'bottomright',touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,boxZoom:true,keyboard:true}).setView([54.5,-3.4],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
 let routeLayer=null,myMarker=null,destMarker=null,startPulse=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,routeCum=[],voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0,wakeLock=null,arrivedAnnounced=false,speedChangeState=null,speedChangeFetchedAt=0,speedOverSince=0,speedRingAt=0,trafficLightState={seen:new Set(),lastFetchedAt:0};
+let cameraHeading=null,cameraTarget=null,lastCameraAt=0,lastHeadingAt=0,headingConfidence=0,safetyState={lastWeather:0,lastCameras:0,lastSchool:0,lastCurve:0,lastGradient:0,active:null};
 let lastRouteProgress=0;
 const P=document.getElementById('panel'),UI=document.getElementById('driveUI'),INS=document.getElementById('instruction'),RB=document.getElementById('routebar'),ST=document.getElementById('stats'),TOAST=document.getElementById('toast'),MENU=document.getElementById('menu'),LANE=document.getElementById('laneCue'),JUNC=document.getElementById('junctionState');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const saved=()=>JSON.parse(localStorage.getItem('muk86.saved')||'[]'); const save=a=>localStorage.setItem('muk86.saved',JSON.stringify(a));
 function show(x){P.innerHTML=x;P.classList.add('show')} function hide(){P.classList.remove('show')}
 function toast(x){TOAST.textContent=x;TOAST.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>TOAST.classList.remove('show'),3000)}
-function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice guidance on':'🔇 Voice guidance off'}</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
+function showSafetyInfo(){show(`<b>UK driver safety</b><div class="small">Speed limits, speeding warning, route-based turn guidance, traffic-light alerts, speed-camera data, weather risk, school-area caution and curve warnings are data-dependent. The satnav does not invent unavailable live information.</div><div class="notice"><b>Map camera protection</b><br>Map rotation is isolated from the interface. Unreliable heading data is filtered or replaced by route direction so the map does not spin at low speed.</div>`)}
+function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice guidance on':'🔇 Voice guidance off'}</button><button onclick="showSafetyInfo();toggleMenu()">🛡️ UK safety systems</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
 function formatDistance(m){if(m<1000)return Math.max(5,Math.round(m/5)*5)+' yd';return (m/1609.344).toFixed(m<16093?1:0)+' mi'}
 function armAudio(){try{const AC=window.AudioContext||window.webkitAudioContext;if(AC){audioCtx=audioCtx||new AC();if(audioCtx.state==='suspended')audioCtx.resume();}}catch(e){}}
 function toggleVoice(){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();toast(voiceOn?'Voice guidance on':'Voice guidance off')}
-function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
-function lookAheadCenter(p,h){if(!p)return null;if(h==null)return [p.lat,p.lon];const dist=45,r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
+function angleWrap(a){return ((a%360)+360)%360;}
+function smoothHeading(a,b){if(b==null||!Number.isFinite(b))return a;if(a==null||!Number.isFinite(a))return angleWrap(b);const d=((b-a+540)%360)-180;const gain=Math.abs(d)>45?.18:.30;return angleWrap(a+d*gain);}
+function headingFromMotion(p){if(!lastPos||!p)return null;const d=hav(lastPos,p);if(d<2)return null;return bearing(lastPos,p);}
+function stableNavigationHeading(p,near){
+  const gps=Number.isFinite(p?.heading)?p.heading:null;
+  const motion=headingFromMotion(p);
+  const route=routeGeo?routeBearingAt(near?.index):null;
+  const moving=(p?.speed||0)>=2.2;
+  let candidate=null;
+  if(moving && gps!=null) candidate=gps;
+  else if(moving && motion!=null) candidate=motion;
+  else if(route!=null) candidate=route;
+  if(candidate==null)return cameraHeading;
+  cameraHeading=smoothHeading(cameraHeading,candidate);
+  headingConfidence=moving?Math.min(1,headingConfidence+.12):Math.max(0,headingConfidence-.08);
+  return cameraHeading;
+}
+function cameraCenterFor(p,h){
+  if(!p)return null;
+  const ahead=Math.max(35,Math.min(95,45+(p.speed||0)*4));
+  return lookAheadCenter(p,h??0,ahead);
+}
+function lookAheadCenter(p,h,distOverride){if(!p)return null;if(h==null)return [p.lat,p.lon];const dist=distOverride??45,r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180)||1);return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 let orientationMode='heading';
-function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;const vp=document.getElementById('mapViewport');const rot=orientationMode==='north'?0:-mapHeading;if(vp)vp.style.transform=`scale(1.06) rotate(${rot}deg)`;const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform=`rotate(${mapHeading}deg)`;}
+function setMapRotation(h){
+  if(h!=null)mapHeading=angleWrap(h);
+  const vp=document.getElementById('mapViewport');
+  const mapEl=document.getElementById('map');
+  if(vp)vp.style.transform='none';
+  if(mapEl)mapEl.style.transform='none';
+  const el=myMarker?.getElement?.();
+  const car=el?.querySelector('.car-arrow');
+  if(car)car.style.transform=`rotate(${mapHeading}deg)`;
+}
+function updateDrivingCamera(p,near,force=false){
+  if(!driveMode||!p)return;
+  const now=performance.now();
+  const h=stableNavigationHeading(p,near);
+  if(h==null)return;
+  setMapRotation(h);
+  const target=cameraCenterFor(p,h);
+  if(!target)return;
+  const moved=lastPos?hav(lastPos,p):999;
+  if(!force && now-lastCameraAt<120 && moved<4)return;
+  lastCameraAt=now;
+  cameraTarget=target;
+  const z=Math.max(15.5,Math.min(18,map.getZoom()||17));
+  map.setView(target,z,{animate:false});
+}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');if(el){el.textContent=msg;el.classList.add('show')}}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');if(el)el.classList.remove('show')}
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180,cosLat=Math.cos(meanLat)||1,x1=(a.lon-p.lon)*cosLat,y1=a.lat-p.lat,x2=(b.lon-p.lon)*cosLat,y2=b.lat-p.lat,dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(-x1*dx-y1*dy)/(dx*dx+dy*dy||1))),q={lat:p.lat+y1+t*dy,lon:p.lon+(x1+t*dx)/cosLat};return {d:hav(p,q),q};}
@@ -125,13 +167,13 @@ async function buildRoute(a,dest,startLive=false){
  driveMode=true;document.body.classList.add('drive-active');UI.style.display='block';map.invalidateSize({pan:false});
  resetNavigationState();
  hide();
- const initialNear=nearestOnRoute(a); const initialHeading=routeBearingAt(initialNear.index)??0; map.setView(lookAheadCenter(a,initialHeading),17,{animate:false}); setMapRotation(initialHeading); updateStartPulse(a); updateRouteColour(a); requestWakeLock();
+ const initialNear=nearestOnRoute(a); const initialHeading=routeBearingAt(initialNear.index)??0; cameraHeading=initialHeading; map.setView(cameraCenterFor(a,initialHeading),17,{animate:false}); setMapRotation(initialHeading); updateStartPulse(a); updateRouteColour(a); requestWakeLock();
  initialiseActiveStep(a);
  renderDrive(a);
  if(startLive)startTracking();
  speak('Route planned. '+formatDistance(rt.distance)+' to go.');
 }
-function resetNavigationState(){lastRouteProgress=0;announced={};lastSpokenText='';lastSpokenAt=0;offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;arrivedAnnounced=false;speedChangeState=null;speedChangeFetchedAt=0;speedOverSince=0;speedRingAt=0;trafficLightState={seen:new Set(),lastFetchedAt:0};}
+function resetNavigationState(){lastRouteProgress=0;announced={};lastSpokenText='';lastSpokenAt=0;offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;cameraHeading=null;cameraTarget=null;lastCameraAt=0;headingConfidence=0;arrivedAnnounced=false;speedChangeState=null;speedChangeFetchedAt=0;speedOverSince=0;speedRingAt=0;trafficLightState={seen:new Set(),lastFetchedAt:0};}
 function routeProgress(p){
  if(!routeGeo?.coordinates?.length||!routeCum.length)return lastRouteProgress||0;
  const n=nearestOnRoute(p);
@@ -346,21 +388,36 @@ async function checkTrafficLights(p){
  }catch(e){}
 }
 
-function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);requestWakeLock();watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});toast('Live navigation started')}
-function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();document.getElementById('mapViewport').style.transform='scale(1) rotate(0deg)';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
-function toggleOrientation(){orientationMode=orientationMode==='heading'?'north':'heading';const b=document.getElementById('orientBtn');if(b)b.textContent=orientationMode==='heading'?'▲':'N';if(lastPos){const h=lastPos.heading??routeBearingAt(nearestOnRoute(lastPos).index)??0;setMapRotation(h);const c=lookAheadCenter(lastPos,h);map.setView(c,17,{animate:false});}toast(orientationMode==='heading'?'Direction-up navigation':'North-up map')}
-function recenter(){if(lastPos){const c=lookAheadCenter(lastPos,lastPos.heading);map.setView(c,17,{animate:false});setMapRotation(lastPos.heading)}}
+function setSafetyBadge(text,type=''){const box=document.getElementById('safetyBadge'),el=document.getElementById('safetyText');if(!box||!el)return;if(!text){box.classList.remove('show');box.className='safety-badge';safetyState.active=null;return}box.className='safety-badge '+type;el.textContent=text;box.classList.add('show');safetyState.active=text;clearTimeout(box._t);box._t=setTimeout(()=>{if(safetyState.active===text){box.classList.remove('show');safetyState.active=null}},7000)}
+async function fetchJson(url,timeout=7000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{signal:c.signal,headers:{'Accept':'application/json'}});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}}
+async function checkGradientRisk(p){if(!driveMode||!routeGeo)return;try{const a=routePointAhead(p,160)||p;const b=routePointAhead(p,360)||a;const q=`[out:json][timeout:6];way(around:120,${a.lat},${a.lon})[highway][incline];way(around:120,${b.lat},${b.lon})[highway][incline];out tags geom;`;const j=await fetchJson('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),6500);for(const w of j.elements||[]){const v=String(w.tags?.incline||'').replace('%','');const n=parseFloat(v);if(Number.isFinite(n)&&Math.abs(n)>=6){if(n>=6)setSafetyBadge('STEEP GRADIENT AHEAD — USE APPROPRIATE GEAR','weather-alert');else if(n<=-6)setSafetyBadge('STEEP DESCENT AHEAD — USE APPROPRIATE GEAR','weather-alert');break}}}catch(e){}}
+async function checkSafetyData(p){if(!driveMode||!p)return;const now=Date.now();
+ if(now-safetyState.lastWeather>300000){safetyState.lastWeather=now;try{const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,apparent_temperature,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m&timezone=auto`;const j=await fetchJson(u,6500);const c=j.current||{};const temp=Number(c.temperature_2m),rain=Number(c.rain||0)+Number(c.showers||0),snow=Number(c.snowfall||0),wind=Number(c.wind_speed_10m||0),code=Number(c.weather_code||0);if(snow>0||[71,73,75,77,85,86].includes(code)){setSafetyBadge('ICE / SNOW RISK — conditions may be hazardous','weather-alert');}else if(rain>=4||[65,67,82].includes(code)){setSafetyBadge('HEAVY RAIN — AQUAPLANING RISK','weather-alert');}else if(temp<=2&&rain>0){setSafetyBadge('LOW TEMPERATURE + RAIN — ICE RISK','weather-alert');}else if(wind>=45||[95,96,99].includes(code)){setSafetyBadge('STRONG WIND / STORM CONDITIONS','weather-alert');}}catch(e){}}
+ if(now-safetyState.lastCameras>30000&&routeGeo){safetyState.lastCameras=now;try{const a=routePointAhead(p,220)||p;const q=`[out:json][timeout:7];(node(around:260,${a.lat},${a.lon})[highway=speed_camera];node(around:260,${a.lat},${a.lon})[enforcement=average_speed];node(around:260,${a.lat},${a.lon})[highway=average_speed_camera];);out tags;`;const j=await fetchJson('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),7000);let best=null;for(const n of j.elements||[]){const d=hav(p,{lat:n.lat,lon:n.lon});if(d<25||d>260)continue;if(!best||d<best.d)best={d,n}}if(best){const avg=String(best.n.tags?.enforcement||'').toLowerCase()==='average_speed'||String(best.n.tags?.highway||'').toLowerCase()==='average_speed_camera';setSafetyBadge(`${avg?'AVERAGE-SPEED CHECK':'SPEED CAMERA'} AHEAD — ${formatDistance(best.d)}`,'camera-alert');if(best.d<180)speak(`${avg?'Average speed check':'Speed camera'} ahead in ${formatDistance(best.d)}.`,false)}}catch(e){}}
+ if(now-safetyState.lastGradient>45000){safetyState.lastGradient=now;await checkGradientRisk(p)}
+ if(now-safetyState.lastSchool>60000){safetyState.lastSchool=now;try{const q=`[out:json][timeout:6];node(around:220,${p.lat},${p.lon})[amenity=school];out tags;`;const j=await fetchJson('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),6500);let nearSchool=false;for(const n of j.elements||[]){const d=hav(p,{lat:n.lat,lon:n.lon});if(d>=25&&d<=180){nearSchool=true;break}}if(nearSchool){const h=new Date().getHours(),weekday=new Date().getDay();if(weekday>=1&&weekday<=5&&(h>=7&&h<=9||h>=14&&h<=17))setSafetyBadge('SCHOOL AREA — EXTRA CAUTION','weather-alert')} }catch(e){}}
+}
+function routeGeometryHazards(p){if(!routeGeo?.coordinates?.length)return;const n=nearestOnRoute(p),i=n.index,cs=routeGeo.coordinates;let sharp=false;for(let k=Math.max(1,i);k<Math.min(cs.length-2,i+35);k++){const a={lat:cs[k-1][1],lon:cs[k-1][0]},b={lat:cs[k][1],lon:cs[k][0]},c={lat:cs[k+1][1],lon:cs[k+1][0]};const ab=bearing(a,b),bc=bearing(b,c);if(angleDiff(ab,bc)>48&&hav(p,b)<320){sharp=true;break}}if(sharp){setSafetyBadge('SHARP CURVE AHEAD — REDUCE SPEED','weather-alert');}}
+
+function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);requestWakeLock();watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:1000,timeout:10000});toast('Live navigation started')}
+function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();const vp=document.getElementById('mapViewport');const me=document.getElementById('map');if(vp)vp.style.transform='none';if(me)me.style.transform='none';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
+function toggleOrientation(){orientationMode=orientationMode==='heading'?'north':'heading';const b=document.getElementById('orientBtn');if(b)b.textContent=orientationMode==='heading'?'▲':'N';if(lastPos){const near=nearestOnRoute(lastPos);const h=orientationMode==='heading'?(stableNavigationHeading(lastPos,near)??routeBearingAt(near.index)):0;setMapRotation(h??0);map.setView(cameraCenterFor(lastPos,h??0),17,{animate:false});}toast(orientationMode==='heading'?'Driving camera enabled':'North-up map enabled')}
+function recenter(){if(lastPos){const near=nearestOnRoute(lastPos);const h=orientationMode==='heading'?(stableNavigationHeading(lastPos,near)??routeBearingAt(near.index)):0;updateDrivingCamera(lastPos,near,true);if(orientationMode==='north')map.setView([lastPos.lat,lastPos.lon],17,{animate:false});}}
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
 async function onPosition(pos){
  const p={lat:pos.coords.latitude,lon:pos.coords.longitude};p.accuracy=pos.coords.accuracy||999;p.speed=Number.isFinite(pos.coords.speed)?Math.max(0,pos.coords.speed):0;
- const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:(lastPos?bearing(lastPos,p):null);p.heading=smoothHeading(lastPos?.heading,rawHeading);lastPos=p;
- const near=nearestOnRoute(p); const snapped=(near.point&&near.d<65)?near.point:{lat:p.lat,lon:p.lon};
+ const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:headingFromMotion(p);
+ p.heading=rawHeading;
+ const near=nearestOnRoute(p); const snapped=(near.point&&near.d<85)?near.point:{lat:p.lat,lon:p.lon};
  if(!myMarker)myMarker=L.marker([snapped.lat,snapped.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([snapped.lat,snapped.lon]);
- let navHeading=p.heading; if((p.speed<4||navHeading==null)&&routeGeo){navHeading=routeBearingAt(near.index);} if(navHeading!=null){setMapRotation(navHeading);const c=lookAheadCenter(snapped,navHeading);map.setView(c,Math.max(16,map.getZoom()),{animate:false});map.invalidateSize({pan:false});}
+ const prev=lastPos; lastPos=p;
+ if(prev&&hav(prev,p)<1.2 && p.speed<1.5) p.speed=0;
+ updateDrivingCamera(snapped,near);
  updateStartPulse(p);updateRouteColour(p);requestWakeLock();
- await speedLimitCheck(p);await checkUpcomingSpeedChange(p);await checkTrafficLights(p);updateStats(p);
+ await Promise.allSettled([speedLimitCheck(p),checkUpcomingSpeedChange(p),checkTrafficLights(p),checkSafetyData(p)]);routeGeometryHazards(p);updateStats(p);
  if(!routeSteps.length)return;await navigationEngine(p);
 }
+
 function isRoundaboutStep(st){const t=st?.maneuver?.type||'';return t==='roundabout'||t==='rotary'||t==='exit roundabout';}
 function routeIndexForManeuver(st){return Number.isFinite(st?._routeIndex)?st._routeIndex:null}
 function hasPassedManeuver(p,st){
@@ -389,15 +446,16 @@ function stepHighwayTransition(prev,cur,next){
 }
 function junctionVoiceForStep(st,index){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
+ const prev=routeSteps[index-1],next=routeSteps[index+1];
+ const joinsMotorway=isHighwayLike(next)||String(next?.ref||'').toUpperCase().startsWith('M');
+ const leavesMotorway=isHighwayLike(prev)||String(prev?.ref||'').toUpperCase().startsWith('M');
  if(t==='fork')return m==='left'?'Keep left.':'Keep right.';
  if(t==='merge')return m==='left'?'Merge left.':'Merge right.';
- if(t==='on ramp')return m==='left'?'Keep left and take the slip road.':m==='right'?'Keep right and take the slip road.':'Take the slip road.';
- if(t==='off ramp')return m==='left'?'Keep left and leave the motorway.':m==='right'?'Keep right and leave the motorway.':'Take the motorway exit.';
+ if(t==='on ramp')return joinsMotorway?(m==='left'?'Keep left and take the slip road to join the motorway.':m==='right'?'Keep right and take the slip road to join the motorway.':'Take the slip road to join the motorway.'):(m==='left'?'Keep left and take the slip road.':m==='right'?'Keep right and take the slip road.':'Take the slip road.');
+ if(t==='off ramp')return leavesMotorway?(m==='left'?'Keep left and take the motorway slip road exit.':m==='right'?'Keep right and take the motorway slip road exit.':'Take the motorway slip road exit.'):(m==='left'?'Keep left and take the slip road.':m==='right'?'Keep right and take the slip road.':'Take the slip road.');
  if(t==='continue' && isHighwayLike(st)){
-  const n=routeSteps[index+1];if(n?.maneuver?.type==='off ramp')return 'Keep left to leave the motorway.';
-  if(n?.maneuver?.type==='on ramp')return 'Keep left for the slip road.';
+  if(next&&(next.maneuver?.type==='off ramp'||next.maneuver?.type==='on ramp'))return next.maneuver?.modifier==='left'?'Keep left for the slip road.':'Keep right for the slip road.';
  }
- if(t==='merge')return m==='left'?'Merge onto the road.':'Merge onto the road.';
  return null;
 }
 function enrichStep(st,index){
@@ -451,8 +509,8 @@ function navigationEngine(p){
  const realJunction=isRoundaboutStep(st)||['turn','fork','merge','on ramp','off ramp'].includes(type)||!!commercialInstruction(st,stepIndex);
  if(realJunction){
    const mphNow=mph(p.speed);
-   const prep=isRoundaboutStep(st)?Math.max(180,Math.min(360,mphNow*8.8)):Math.max(150,Math.min(330,mphNow*7.2));
-   const immediate=isRoundaboutStep(st)?Math.max(28,Math.min(52,mphNow*1.25)):Math.max(24,Math.min(48,mphNow*1.0));
+   const prep=isRoundaboutStep(st)?Math.max(120,Math.min(240,mphNow*5.2)):Math.max(100,Math.min(220,mphNow*4.8));
+   const immediate=isRoundaboutStep(st)?Math.max(22,Math.min(38,mphNow*0.9)):Math.max(20,Math.min(35,mphNow*0.75));
    if(distTo<prep&&!announced[key+'a']){announced[key+'a']=1;speak(preparationForStep(st,distTo));}
    if(distTo<immediate&&!announced[key+'b']){announced[key+'b']=1;speak(immediateForStep(st));}
  }
@@ -553,24 +611,6 @@ function maneuverArrow(st){
 }
 
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')find()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&driveMode)requestWakeLock()});
-</script>
-
-<script id="muk-v37-address-fix-js">
-(function(){
- function wire(){
-  const boxes=[...document.querySelectorAll('input')].filter(x=>{const a=(x.placeholder||'').toLowerCase(), n=(x.name||'').toLowerCase(), i=(x.id||'').toLowerCase(); return a.includes('postcode')||a.includes('address')||n.includes('postcode')||n.includes('address')||i.includes('postcode')||i.includes('address');});
-  boxes.forEach(input=>{
-   input.removeAttribute('disabled'); input.removeAttribute('readonly'); input.disabled=false; input.readOnly=false; input.setAttribute('autocomplete','street-address');
-   input.style.pointerEvents='auto'; input.style.position='relative'; input.style.zIndex='10001';
-   if(!input.dataset.muk37){
-    input.dataset.muk37='1';
-    input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); const form=input.closest('form'); if(form) form.requestSubmit(); else {const b=input.parentElement?.querySelector('button'); if(b) b.click();}}});
-   }
-  });
- }
- document.addEventListener('DOMContentLoaded',wire);
- setTimeout(wire,500); setTimeout(wire,1500);
-})();
 </script>
 </body>
 </html>
