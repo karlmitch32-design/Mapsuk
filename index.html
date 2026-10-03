@@ -3,13 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MUK SATNAV 86 — V40 FULL SCREEN NAVIGATION</title>
+<title>MUK SATNAV 86 — V35 SLICK UK NAVIGATION</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#172019;--nav2:#2f4935;--lime:#c9f36a;--cyan:#48e5ff;--cream:#f7f8f3;--ink:#101711;--muted:#9da99c;--white:#fff;--danger:#ff4d55;--glass:rgba(10,16,12,.84);--shadow:0 12px 34px rgba(0,0,0,.34)}
 *{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#080b09;color:var(--ink);overflow:hidden}button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;font-weight:850;background:var(--nav);color:#fff}button.secondary{background:#e9eee6;color:var(--nav)}button.danger{background:#f1dfdb;color:#8d352b}
-#mapViewport{position:fixed;left:0;top:0;width:100vw;height:100dvh;height:100vh;z-index:1;overflow:hidden;transform-origin:50% 50%;will-change:transform;background:#07111d;contain:paint}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#07111d}.leaflet-container{background:#07111d}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.62)!important}.drive-active #mapViewport{transform:scale(1.42)}
-@keyframes subtleNeonArrow{0%,100%{opacity:.62;filter:drop-shadow(0 0 2px rgba(92,255,76,.25))}50%{opacity:.92;filter:drop-shadow(0 0 7px rgba(92,255,76,.5))}}.muk-car .car-arrow{color:#63ff55!important;animation:subtleNeonArrow 1.25s ease-in-out infinite;text-shadow:0 0 4px rgba(99,255,85,.45)!important}
+#mapViewport{position:absolute;left:-50%;top:-50%;width:200%;height:200%;z-index:1;overflow:hidden;transform-origin:50% 50%;will-change:transform;background:#dfe7dc;contain:paint}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
 
 /* PRE-DRIVE LAUNCHER */
 .topbar{position:absolute;z-index:1200;top:14px;left:14px;right:14px;display:flex;gap:10px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(15,23,17,.94);color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.5px;display:flex;align-items:center;gap:8px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--lime);color:#172019;font-size:15px}.searchbox{flex:1;display:flex;align-items:center;gap:6px;background:rgba(250,252,247,.97);padding:6px 7px;border-radius:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.65)}.searchbox input{flex:1;border:0;outline:0;padding:9px 7px;min-width:0;background:transparent;font-weight:650}.searchbox button{background:var(--nav2);padding:9px 15px}.search-icon{font-size:25px;color:#536152;padding-left:6px}
@@ -23,25 +22,8 @@
 @media(min-width:800px){.panel{width:440px;right:auto}.topbar{left:20px;right:20px}.cockpit-head{left:20px;right:20px}.instruction{left:20px;right:20px}.routebar{left:20px;right:20px}.bottom{left:20px;right:20px}.lane-cue{bottom:92px}}
 .drive-active .topbar{display:none}.drive-active #mapViewport{filter:saturate(.82) brightness(.96)}.drive-active .leaflet-control-attribution{opacity:.65}.start-pulse{width:24px;height:24px;border-radius:50%;background:rgba(22,131,255,.18);border:3px solid #1683ff;box-shadow:0 0 8px rgba(22,131,255,.55);animation:mukPulse 1.15s ease-in-out infinite}@keyframes mukPulse{0%,100%{transform:scale(.72);opacity:.55}50%{transform:scale(1.15);opacity:1}}.pro-route{filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}.road-alert{display:none;position:absolute;z-index:1450;left:50%;transform:translateX(-50%);top:225px;background:#fff5d9;color:#6b4b00;border:2px solid #e3bd52;border-radius:12px;padding:9px 13px;box-shadow:var(--shadow);font-weight:900}.road-alert.show{display:block}
 @media(max-width:520px){.cockpit-brand span:last-child{display:none}.cockpit-brand{padding:7px}.destination-chip{padding:6px 9px}.instruction{top:64px;min-height:96px;padding:9px 11px;gap:8px}.arrow{font-size:48px;width:61px;min-width:61px}.roundabout-svg{width:74px;height:74px}.ins-main .big{font-size:19px}.ins-main .sub{font-size:10px}.distance{font-size:23px}.routebar{top:164px}.stats{max-width:calc(100% - 54px);overflow:hidden}.stat{min-width:64px;padding:4px 7px}.stat:nth-child(3){display:none}.stat b{font-size:14px}.stat.limit b{font-size:16px}.bottom{bottom:9px}.round{width:43px;height:43px}}
-
-/* V40 RECOVERY: full-screen driving map + mobile edge-to-edge */
-html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#050b12}
-body{min-height:100dvh}
-#app{position:fixed;inset:0;width:100%;height:100dvh;min-height:100dvh;overflow:hidden}
-#mapViewport{position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;min-height:100%!important;overflow:hidden!important;transform-origin:center center;z-index:0}
-#map{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
-#map .leaflet-container{width:100%!important;height:100%!important}
-.drive-active #mapViewport{display:block!important}
-.drive-active #map{display:block!important}
-.drive-active .bottom{z-index:20}
-.drive-active .drive-ui,.drive-active .panel,.drive-active .toast,.drive-active .road-alert,.drive-active .speed-warning{z-index:25}
-/* subtle dim neon-green navigation arrow */
-.car-arrow{color:#39ff78!important;text-shadow:0 0 4px rgba(57,255,120,.35),0 0 9px rgba(57,255,120,.18)!important;animation:mukDimNeon 1.35s ease-in-out infinite}
-@keyframes mukDimNeon{0%,100%{opacity:.62;filter:brightness(.82)}50%{opacity:.94;filter:brightness(1.08)}}
-@media (max-width:600px){html,body,#app{height:100dvh;min-height:100dvh}.leaflet-control-zoom{display:none}.topbar{display:none!important}}
-@supports not (height:100dvh){body,#app,#mapViewport{height:100vh;min-height:100vh}}
 </style>
-<meta name="muk-version" content="V40 Full Screen Navigation"><meta name="muk-data" content="OSM road network + UK speed rules + Overpass traffic signals + official UK road-data architecture"><meta name="muk-ui" content="professional cockpit, no-neon, full-bleed map, direction-up/north-up"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data."></head>
+<meta name="muk-version" content="V35 Slick UK Navigation"><meta name="muk-data" content="OSM road network + UK speed rules + Overpass traffic signals + official UK road-data architecture"><meta name="muk-ui" content="professional cockpit, no-neon, full-bleed map, direction-up/north-up"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data."><style>html,body,#app{width:100%;height:100%;margin:0;padding:0;overflow:hidden}@keyframes mukArrowPulse{0%,100%{opacity:.62;filter:drop-shadow(0 0 2px rgba(141,255,85,.35))}50%{opacity:.9;filter:drop-shadow(0 0 7px rgba(141,255,85,.55))}}#map{width:100%;height:100%;background:#07111d}.speed-warning{z-index:5000;top:auto!important;bottom:92px!important;left:50%!important;right:auto!important;transform:translateX(-50%);width:min(92vw,430px);text-align:center;font-weight:800}@media(max-width:600px){.topbar{height:48px}.topbar .searchbox input{min-width:0;font-size:14px}.topbar .searchbox button{padding:0 10px}.drive-active .topbar{display:flex!important}.instruction{top:66px!important}.bottom{bottom:max(10px,env(safe-area-inset-bottom))!important}.stats{bottom:55px!important}}</style></head>
 <body>
 <div id="app">
 <div id="mapViewport"><div id="map"></div></div>
@@ -76,7 +58,7 @@ function toggleVoice(){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window
 function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
 function lookAheadCenter(p,h){if(!p)return null;if(h==null)return [p.lat,p.lon];const dist=45,r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180));return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 let orientationMode='heading';
-function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;const vp=document.getElementById('mapViewport');const rot=orientationMode==='north'?0:-mapHeading;if(vp)vp.style.transform=`scale(1.06) rotate(${rot}deg)`;const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform=`rotate(${mapHeading}deg)`;}
+function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;const vp=document.getElementById('mapViewport');if(vp)vp.style.transform='none';const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform=`rotate(${mapHeading}deg)`;}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');if(el){el.textContent=msg;el.classList.add('show')}}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');if(el)el.classList.remove('show')}
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180,cosLat=Math.cos(meanLat)||1,x1=(a.lon-p.lon)*cosLat,y1=a.lat-p.lat,x2=(b.lon-p.lon)*cosLat,y2=b.lat-p.lat,dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(-x1*dx-y1*dy)/(dx*dx+dy*dy||1))),q={lat:p.lat+y1+t*dy,lon:p.lon+(x1+t*dx)/cosLat};return {d:hav(p,q),q};}
@@ -358,7 +340,7 @@ async function checkTrafficLights(p){
 }
 
 function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);requestWakeLock();watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});toast('Live navigation started')}
-function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();document.getElementById('mapViewport').style.transform='scale(1) rotate(0deg)';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
+function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();document.getElementById('mapViewport').style.transform='none';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
 function toggleOrientation(){orientationMode=orientationMode==='heading'?'north':'heading';const b=document.getElementById('orientBtn');if(b)b.textContent=orientationMode==='heading'?'▲':'N';if(lastPos){const h=lastPos.heading??routeBearingAt(nearestOnRoute(lastPos).index)??0;setMapRotation(h);const c=lookAheadCenter(lastPos,h);map.setView(c,17,{animate:false});}toast(orientationMode==='heading'?'Direction-up navigation':'North-up map')}
 function recenter(){if(lastPos){const c=lookAheadCenter(lastPos,lastPos.heading);map.setView(c,17,{animate:false});setMapRotation(lastPos.heading)}}
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
@@ -490,7 +472,7 @@ function immediateForStep(st){
 
 
 function carIcon(){
- const html='<div class="car-arrow" style="width:34px;height:46px;display:flex;align-items:center;justify-content:center;font-size:34px;line-height:1;color:#63ff55;text-shadow:0 0 4px rgba(99,255,85,.45);transform-origin:center">▲</div>';
+ const html='<div class="car-arrow" style="width:34px;height:46px;display:flex;align-items:center;justify-content:center;font-size:34px;line-height:1;color:#8dff55;text-shadow:0 0 5px rgba(141,255,85,.45),0 0 10px rgba(141,255,85,.20);animation:mukArrowPulse 1.5s ease-in-out infinite;transform-origin:center">▲</div>';
  return L.divIcon({className:'muk-car',html,iconSize:[38,52],iconAnchor:[19,26]});
 }
 function actionableStep(st){
