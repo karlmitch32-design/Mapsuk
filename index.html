@@ -84,14 +84,19 @@ function cameraCenterFor(p,h){
 function lookAheadCenter(p,h,distOverride){if(!p)return null;if(h==null)return [p.lat,p.lon];const dist=distOverride??45,r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180)||1);return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 let orientationMode='heading';
 function setMapRotation(h){
-  if(h!=null)mapHeading=angleWrap(h);
-  const vp=document.getElementById('mapViewport');
+  if(h!=null&&Number.isFinite(h))mapHeading=angleWrap(h);
   const mapEl=document.getElementById('map');
-  if(vp)vp.style.transform='none';
-  if(mapEl)mapEl.style.transform='none';
   const el=myMarker?.getElement?.();
   const car=el?.querySelector('.car-arrow');
-  if(car)car.style.transform=`rotate(${mapHeading}deg)`;
+  if(mapEl){
+    const rotate=orientationMode==='heading' ? -mapHeading : 0;
+    mapEl.style.setProperty('transform',`scale(1.28) rotate(${rotate}deg)`,'important');
+    mapEl.style.setProperty('transform-origin','50% 50%','important');
+  }
+  if(car){
+    const carRotate=orientationMode==='heading' ? mapHeading : 0;
+    car.style.transform=`rotate(${carRotate}deg)`;
+  }
 }
 function updateDrivingCamera(p,near,force=false){
   if(!driveMode||!p)return;
@@ -248,6 +253,7 @@ function speedLimitFromTags(t,travelHeading,segA,segB){
  if(hw==='motorway')return {limit:70,label:'70 mph',source:'national-road-class'};
  if(String(tags.dual_carriageway||'').toLowerCase()==='yes')return {limit:70,label:'70 mph',source:'national-dual'};
  if(String(tags.motorroad||'').toLowerCase()==='yes')return {limit:70,label:'70 mph',source:'national-motorroad'};
+ if(['residential','unclassified','living_street'].includes(hw))return {limit:30,label:'30 mph',source:'uk-default-road-class'};
  return {limit:null,label:'—',source:'unknown'};
 }
 function currentRouteHints(){
@@ -271,7 +277,7 @@ function selectSpeedCandidate(elements,p,travelHeading){
  for(const w of (elements||[])){
   const g=w.geometry||[];for(let i=1;i<g.length;i++){
    const a={lat:g[i-1].lat,lon:g[i-1].lon},b={lat:g[i].lat,lon:g[i].lon};
-   const z=roadSegmentDistance(p,a,b);if(z.d>120)continue;
+   const z=roadSegmentDistance(p,a,b);if(z.d>180)continue;
    const rb=bearing(a,b), reverse=String(w.tags?.oneway||'').toLowerCase()==='-1', roadBearing=reverse?(rb+180)%360:rb;
    const hp=travelHeading==null?0:angleDiff(travelHeading,roadBearing);
    let routePenalty=0;
@@ -296,10 +302,10 @@ async function speedLimitCheck(p){
  try{
   const ahead=routePointAhead(p,85)||p;
   const ahead2=routePointAhead(p,210)||p;
-  const q=`[out:json][timeout:8];(way(around:120,${p.lat},${p.lon})[highway];way(around:130,${ahead.lat},${ahead.lon})[highway];way(around:130,${ahead2.lat},${ahead2.lon})[highway];);out tags geom;`;
+  const q=`[out:json][timeout:10];(way(around:180,${p.lat},${p.lon})[highway];way(around:180,${ahead.lat},${ahead.lon})[highway];way(around:180,${ahead2.lat},${ahead2.lon})[highway];);out tags geom;`;
   const j=await overpassJson(q);if(!j)throw Error('speed data unavailable');
   const best=selectSpeedCandidate(j.elements||[],p,p.heading);
-  if(!best){return;}
+  if(!best){speedLimitLabel=speedLimitLabel||'—';return;}
   const data=speedLimitFromTags(best.tags,p.heading,best.a,best.b);
   if(data.limit){speedLimit=data.limit;speedLimitLabel=data.label;}
   else if(speedLimit==null){speedLimitLabel='—';}
@@ -318,7 +324,7 @@ function speedChangeRing(){
 
 function updateSpeedWarning(speed){
  const el=document.getElementById('speedWarning');
- if(!speedLimit||speed<1){el.classList.remove('show');speedOverSince=0;return}
+ if(!speedLimit||speed<3){el.classList.remove('show');speedOverSince=0;return}
  const over=speed>speedLimit+1;
  if(over){
    if(!speedOverSince)speedOverSince=Date.now();
@@ -446,16 +452,15 @@ function stepHighwayTransition(prev,cur,next){
 }
 function junctionVoiceForStep(st,index){
  const t=st?.maneuver?.type||'',m=st?.maneuver?.modifier||'';
- const prev=routeSteps[index-1],next=routeSteps[index+1];
- const joinsMotorway=isHighwayLike(next)||String(next?.ref||'').toUpperCase().startsWith('M');
- const leavesMotorway=isHighwayLike(prev)||String(prev?.ref||'').toUpperCase().startsWith('M');
  if(t==='fork')return m==='left'?'Keep left.':'Keep right.';
  if(t==='merge')return m==='left'?'Merge left.':'Merge right.';
- if(t==='on ramp')return joinsMotorway?(m==='left'?'Keep left and take the slip road to join the motorway.':m==='right'?'Keep right and take the slip road to join the motorway.':'Take the slip road to join the motorway.'):(m==='left'?'Keep left and take the slip road.':m==='right'?'Keep right and take the slip road.':'Take the slip road.');
- if(t==='off ramp')return leavesMotorway?(m==='left'?'Keep left and take the motorway slip road exit.':m==='right'?'Keep right and take the motorway slip road exit.':'Take the motorway slip road exit.'):(m==='left'?'Keep left and take the slip road.':m==='right'?'Keep right and take the slip road.':'Take the slip road.');
+ if(t==='on ramp')return m==='left'?'Keep left and take the slip road.':m==='right'?'Keep right and take the slip road.':'Take the slip road.';
+ if(t==='off ramp')return m==='left'?'Keep left and leave the motorway.':m==='right'?'Keep right and leave the motorway.':'Take the motorway exit.';
  if(t==='continue' && isHighwayLike(st)){
-  if(next&&(next.maneuver?.type==='off ramp'||next.maneuver?.type==='on ramp'))return next.maneuver?.modifier==='left'?'Keep left for the slip road.':'Keep right for the slip road.';
+  const n=routeSteps[index+1];if(n?.maneuver?.type==='off ramp')return 'Keep left to leave the motorway.';
+  if(n?.maneuver?.type==='on ramp')return 'Keep left for the slip road.';
  }
+ if(t==='merge')return m==='left'?'Merge onto the road.':'Merge onto the road.';
  return null;
 }
 function enrichStep(st,index){
@@ -509,8 +514,8 @@ function navigationEngine(p){
  const realJunction=isRoundaboutStep(st)||['turn','fork','merge','on ramp','off ramp'].includes(type)||!!commercialInstruction(st,stepIndex);
  if(realJunction){
    const mphNow=mph(p.speed);
-   const prep=isRoundaboutStep(st)?Math.max(120,Math.min(240,mphNow*5.2)):Math.max(100,Math.min(220,mphNow*4.8));
-   const immediate=isRoundaboutStep(st)?Math.max(22,Math.min(38,mphNow*0.9)):Math.max(20,Math.min(35,mphNow*0.75));
+   const prep=isRoundaboutStep(st)?Math.max(100,Math.min(190,mphNow*4.8)):Math.max(85,Math.min(180,mphNow*4.0));
+   const immediate=isRoundaboutStep(st)?Math.max(20,Math.min(34,mphNow*.85)):Math.max(18,Math.min(32,mphNow*.72));
    if(distTo<prep&&!announced[key+'a']){announced[key+'a']=1;speak(preparationForStep(st,distTo));}
    if(distTo<immediate&&!announced[key+'b']){announced[key+'b']=1;speak(immediateForStep(st));}
  }
