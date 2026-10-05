@@ -11,7 +11,7 @@
 #mapViewport{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;contain:paint;transform:none!important;transform-origin:50% 50%;will-change:transform}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;transform:none!important;transform-origin:center center;will-change:auto}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
 
 /* PRE-DRIVE LAUNCHER */
-.topbar{position:absolute;z-index:1200;top:14px;left:14px;right:14px;display:flex;gap:10px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(15,23,17,.94);color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.5px;display:flex;align-items:center;gap:8px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--lime);color:#172019;font-size:15px}.searchbox{flex:1;display:flex;align-items:center;gap:6px;background:rgba(250,252,247,.97);padding:6px 7px;border-radius:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.65)}.searchbox input{flex:1;border:0;outline:0;padding:9px 7px;min-width:0;background:transparent;font-weight:650}.searchbox button{background:var(--nav2);padding:9px 15px}.search-icon{font-size:25px;color:#536152;padding-left:6px}
+.topbar{position:absolute;z-index:1200;top:14px;left:14px;right:14px;display:flex;gap:10px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(15,23,17,.94);color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.5px;display:flex;align-items:center;gap:8px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--lime);color:#172019;font-size:15px}.searchbox{flex:1;display:flex;align-items:center;gap:4px;background:rgba(250,252,247,.97);padding:3px 5px;border-radius:11px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.65);min-height:38px}.searchbox input{flex:1;border:0;outline:0;padding:5px 5px;min-width:0;background:transparent;font-weight:650;font-size:14px}.searchbox button{background:var(--nav2);padding:7px 10px;border-radius:9px;font-size:11px}.search-icon{font-size:19px;color:#536152;padding-left:4px}
 /* DRIVING COCKPIT — map is background, guidance is the product */
 .drive-ui{position:absolute;z-index:1300;left:0;right:0;top:0;bottom:0;pointer-events:none;display:none}.drive-ui>*{pointer-events:auto}.cockpit-head{position:absolute;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:9px}.cockpit-brand,.destination-chip,.drive-status{background:var(--glass);color:#fff;border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(12px);box-shadow:var(--shadow)}.cockpit-brand{display:flex;align-items:center;gap:7px;border-radius:14px;padding:7px 10px;font-weight:900;letter-spacing:.35px}.cockpit-brand .brand-mark{width:25px;height:25px;font-size:13px}.destination-chip{min-width:0;flex:1;border-radius:14px;padding:6px 12px;overflow:hidden}.destination-chip small{display:block;color:#a9b4a8;font-size:8px;font-weight:850;letter-spacing:1px}.destination-chip b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.drive-status{border-radius:14px;padding:10px 11px;font-size:9px;font-weight:950;letter-spacing:.7px;display:flex;gap:6px;align-items:center}.gps-dot{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime)}
 .instruction{position:absolute;top:68px;left:12px;right:12px;margin:0;background:linear-gradient(135deg,rgba(9,15,11,.94),rgba(24,38,28,.91));color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:20px;box-shadow:var(--shadow);min-height:104px;padding:12px 15px;display:flex;align-items:center;gap:13px;border-left:5px solid var(--lime);backdrop-filter:blur(14px)}.arrow{font-size:58px;line-height:1;color:var(--lime);width:78px;min-width:78px;text-align:center;font-weight:950;text-shadow:0 0 18px rgba(201,243,106,.2)}.roundabout-svg{width:88px;height:88px;overflow:visible}.roundabout-svg .ring{fill:rgba(255,255,255,.03);stroke:#d8e0d5;stroke-width:9}.roundabout-svg .road{fill:none;stroke:#78877a;stroke-width:5;stroke-linecap:round}.roundabout-svg .active{stroke:var(--cyan);stroke-width:8;filter:drop-shadow(0 0 5px var(--cyan))}.roundabout-svg text{font-size:9px;font-weight:950;fill:#fff}.ins-main{flex:1;min-width:0}.ins-main .big{font-size:23px;font-weight:950;line-height:1.05;text-transform:uppercase;letter-spacing:.2px}.ins-main .sub{font-size:12px;color:#aeb8ad;margin-top:6px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.distance{font-size:27px;font-weight:950;white-space:nowrap;color:var(--lime)}
@@ -66,7 +66,33 @@ window.angleDiff=function(a,b){
   if(a==null||b==null||!Number.isFinite(+a)||!Number.isFinite(+b)) return 180;
   return Math.abs((((+a-+b)+540)%360)-180);
 };
-const hav=window.hav,bearing=window.bearing,angleDiff=window.angleDiff;
+// Core navigation geometry helpers — kept global so every navigation function can use them.
+function hav(a,b){
+  if(!a||!b||!Number.isFinite(+a.lat)||!Number.isFinite(+a.lon)||!Number.isFinite(+b.lat)||!Number.isFinite(+b.lon)) return Infinity;
+  const R=6371000,r=Math.PI/180,dLat=(b.lat-a.lat)*r,dLon=(b.lon-a.lon)*r,la1=a.lat*r,la2=b.lat*r;
+  const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+function bearing(a,b){
+  if(!a||!b||!Number.isFinite(+a.lat)||!Number.isFinite(+a.lon)||!Number.isFinite(+b.lat)||!Number.isFinite(+b.lon)) return null;
+  const r=Math.PI/180,la1=a.lat*r,la2=b.lat*r,dl=(b.lon-a.lon)*r;
+  return (Math.atan2(Math.sin(dl)*Math.cos(la2),Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dl))/r+360)%360;
+}
+function angleDiff(a,b){if(a==null||b==null||!Number.isFinite(+a)||!Number.isFinite(+b))return 180;return Math.abs((((+a-+b)+540)%360)-180);}
+function nearestOnRoute(p){
+  if(!p||!routeGeo?.coordinates?.length)return {d:Infinity,index:0,point:p||null};
+  const cs=routeGeo.coordinates; let best={d:Infinity,index:0,point:null};
+  const cosLat=Math.cos((+p.lat||0)*Math.PI/180)||1;
+  for(let i=0;i<cs.length-1;i++){
+    const a={lat:cs[i][1],lon:cs[i][0]},b={lat:cs[i+1][1],lon:cs[i+1][0]};
+    const ax=(a.lon-p.lon)*cosLat,ay=a.lat-p.lat,bx=(b.lon-p.lon)*cosLat,by=b.lat-p.lat;
+    const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,(-ax*dx-ay*dy)/(dx*dx+dy*dy||1)));
+    const q={lat:p.lat+(a.lat-p.lat)+t*(b.lat-a.lat),lon:p.lon+((a.lon-p.lon)+t*(b.lon-a.lon))};
+    const d=hav(p,q);
+    if(d<best.d)best={d,index:i,point:q};
+  }
+  return best;
+}
 const map=L.map('map',{zoomControl:true,zoomControlPosition:'bottomright',touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,boxZoom:true,keyboard:true}).setView([54.5,-3.4],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
 let routeLayer=null,myMarker=null,destMarker=null,startPulse=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,routeCum=[],voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0,wakeLock=null,arrivedAnnounced=false,speedChangeState=null,speedChangeFetchedAt=0,speedOverSince=0,speedRingAt=0,trafficLightState={seen:new Set(),lastFetchedAt:0};
