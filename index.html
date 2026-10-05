@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>UK satnav — V44 Production Cockpit</title>
+<title>MUK SATNAV 86 — V55 GOOGLE-STYLE DRIVING CAMERA & SPEED AUDIO</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--nav:#172019;--nav2:#2f4935;--lime:#c9f36a;--cyan:#48e5ff;--cream:#f7f8f3;--ink:#101711;--muted:#9da99c;--white:#fff;--danger:#ff4d55;--glass:rgba(10,16,12,.84);--shadow:0 12px 34px rgba(0,0,0,.34)}
 *{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#080b09;color:var(--ink);overflow:hidden}button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;font-weight:850;background:var(--nav);color:#fff}button.secondary{background:#e9eee6;color:var(--nav)}button.danger{background:#f1dfdb;color:#8d352b}
-#mapViewport{position:fixed;inset:0;width:100vw;height:100dvh;z-index:1;overflow:hidden;background:#dfe7dc;contain:paint}#map{position:absolute;inset:-18%;width:136%;height:136%;z-index:1;overflow:hidden;background:#dfe7dc;transform-origin:50% 50%;will-change:transform}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
+#mapViewport{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;contain:paint;transform:none!important;will-change:auto}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;transform:none!important;transform-origin:center center;will-change:auto}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
 
 /* PRE-DRIVE LAUNCHER */
 .topbar{position:absolute;z-index:1200;top:14px;left:14px;right:14px;display:flex;gap:10px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(15,23,17,.94);color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.5px;display:flex;align-items:center;gap:8px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--lime);color:#172019;font-size:15px}.searchbox{flex:1;display:flex;align-items:center;gap:6px;background:rgba(250,252,247,.97);padding:6px 7px;border-radius:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.65)}.searchbox input{flex:1;border:0;outline:0;padding:9px 7px;min-width:0;background:transparent;font-weight:650}.searchbox button{background:var(--nav2);padding:9px 15px}.search-icon{font-size:25px;color:#536152;padding-left:6px}
@@ -20,75 +20,25 @@
 .speed-warning{display:none;position:absolute;z-index:1450;top:181px;left:50%;transform:translateX(-50%);background:var(--danger);color:#fff;border-radius:13px;padding:10px 15px;box-shadow:var(--shadow);font-weight:950;border:1px solid rgba(255,255,255,.35)}.speed-warning.show{display:block}.junction-state{display:none;position:absolute;z-index:1450;top:225px;left:50%;transform:translateX(-50%);background:rgba(7,12,9,.94);color:#fff;border:1px solid var(--cyan);border-radius:12px;padding:8px 13px;box-shadow:0 0 20px rgba(72,229,255,.18);font-weight:900;text-align:center;min-width:190px}.junction-state.show{display:block}.panel{position:absolute;z-index:1400;left:12px;right:12px;bottom:74px;background:#fff;border-radius:18px;padding:14px;box-shadow:var(--shadow);max-height:62%;overflow:auto;display:none}.panel.show{display:block}.small{font-size:12px;color:#667164;line-height:1.45}.notice{background:#f3f6ee;border:1px solid #dce3d5;padding:10px;border-radius:11px;margin-top:9px}.item{padding:11px 0;border-bottom:1px solid #e4e8e0}.actions{display:flex;gap:7px;margin-top:9px}.actions button{flex:1}.row{display:flex;gap:7px}.row>*{flex:1}.toast{position:absolute;z-index:1500;left:50%;transform:translateX(-50%);bottom:82px;background:#111912;color:#fff;padding:10px 15px;border-radius:13px;box-shadow:var(--shadow);display:none;font-weight:800;border:1px solid rgba(201,243,106,.22)}.toast.show{display:block}.menu{position:absolute;z-index:1401;right:12px;bottom:74px;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:7px;display:none;width:220px}.menu.show{display:block}.menu button{width:100%;margin:2px 0;text-align:left;background:#fff;color:var(--ink)}.menu button:hover{background:#edf2e9}
 .lane-cue .lane-cue-icon{font-size:36px;line-height:1.05}.lane-cue{position:absolute;left:50%;transform:translateX(-50%);bottom:82px;background:rgba(8,13,10,.92);border:1px solid rgba(72,229,255,.35);border-radius:15px;box-shadow:var(--shadow);padding:8px 14px;font-size:35px;font-weight:950;color:var(--cyan);display:none;min-width:155px;text-align:center;backdrop-filter:blur(10px)}.lane-cue small{display:block;font-size:8px;letter-spacing:.9px;color:#aeb8ad;font-weight:900;margin-top:-5px}
 @media(min-width:800px){.panel{width:440px;right:auto}.topbar{left:20px;right:20px}.cockpit-head{left:20px;right:20px}.instruction{left:20px;right:20px}.routebar{left:20px;right:20px}.bottom{left:20px;right:20px}.lane-cue{bottom:92px}}
-.drive-active .topbar{display:none}.drive-active #mapViewport{filter:saturate(.82) brightness(.96)}.drive-active #map{transform-origin:50% 50%;will-change:transform}.drive-active .leaflet-control-container{display:none}.drive-active .leaflet-control-attribution{opacity:.65}.start-pulse{width:24px;height:24px;border-radius:50%;background:rgba(22,131,255,.18);border:3px solid #1683ff;box-shadow:0 0 8px rgba(22,131,255,.55);animation:mukPulse 1.15s ease-in-out infinite}@keyframes mukPulse{0%,100%{transform:scale(.72);opacity:.55}50%{transform:scale(1.15);opacity:1}}.pro-route{filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}.road-alert{display:none;position:absolute;z-index:1450;left:50%;transform:translateX(-50%);top:225px;background:#fff5d9;color:#6b4b00;border:2px solid #e3bd52;border-radius:12px;padding:9px 13px;box-shadow:var(--shadow);font-weight:900}.road-alert.show{display:block}
+.drive-active .topbar{display:none}.drive-active #mapViewport{filter:saturate(.82) brightness(.96)}.drive-active .leaflet-control-attribution{opacity:.65}.start-pulse{width:24px;height:24px;border-radius:50%;background:rgba(22,131,255,.18);border:3px solid #1683ff;box-shadow:0 0 8px rgba(22,131,255,.55);animation:mukPulse 1.15s ease-in-out infinite}@keyframes mukPulse{0%,100%{transform:scale(.72);opacity:.55}50%{transform:scale(1.15);opacity:1}}.pro-route{filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}.road-alert{display:none;position:absolute;z-index:1450;left:50%;transform:translateX(-50%);top:225px;background:#fff5d9;color:#6b4b00;border:2px solid #e3bd52;border-radius:12px;padding:9px 13px;box-shadow:var(--shadow);font-weight:900}.road-alert.show{display:block}
+.safety-badge{position:absolute;z-index:1450;left:12px;right:12px;top:275px;display:none;justify-content:center;pointer-events:none}.safety-badge.show{display:flex}.safety-badge span{max-width:min(92vw,520px);background:rgba(7,12,9,.94);color:#fff;border:1px solid rgba(201,243,106,.38);border-radius:12px;padding:8px 12px;box-shadow:var(--shadow);font-size:11px;font-weight:900;text-align:center}.camera-alert span{border-color:rgba(255,210,80,.7)}.weather-alert span{border-color:rgba(72,229,255,.65)}
 @media(max-width:520px){.cockpit-brand span:last-child{display:none}.cockpit-brand{padding:7px}.destination-chip{padding:6px 9px}.instruction{top:64px;min-height:96px;padding:9px 11px;gap:8px}.arrow{font-size:48px;width:61px;min-width:61px}.roundabout-svg{width:74px;height:74px}.ins-main .big{font-size:19px}.ins-main .sub{font-size:10px}.distance{font-size:23px}.routebar{top:164px}.stats{max-width:calc(100% - 54px);overflow:hidden}.stat{min-width:64px;padding:4px 7px}.stat:nth-child(3){display:none}.stat b{font-size:14px}.stat.limit b{font-size:16px}.bottom{bottom:9px}.round{width:43px;height:43px}}
-@keyframes mukArrowPulse{0%,100%{opacity:.62}50%{opacity:.9}}.car-arrow{animation:mukArrowPulse 1.5s ease-in-out infinite}
-
-/* V44 PRODUCTION SAFETY LAYOUT: one responsive stack, no panel collisions */
-@media(max-width:520px){
-  .topbar{top:max(8px,env(safe-area-inset-top));left:8px;right:8px;gap:7px}
-  .topbar .brand{padding:7px 9px;border-radius:13px}
-  .topbar .brand .brand-mark{width:25px;height:25px}
-  .topbar .brand span:last-child{display:none}
-  .searchbox{padding:4px 5px;border-radius:13px}
-  .searchbox input{padding:8px 5px;font-size:14px}
-  .searchbox button{padding:8px 10px;border-radius:10px;font-size:12px}
-  .cockpit-head{top:max(8px,env(safe-area-inset-top));left:8px;right:8px;gap:6px}
-  .cockpit-brand{padding:6px 7px;border-radius:12px}
-  .cockpit-brand .brand-mark{width:23px;height:23px}
-  .destination-chip{padding:5px 8px;border-radius:12px}
-  .destination-chip small{font-size:7px}
-  .destination-chip b{font-size:11px}
-  .drive-status{padding:8px 8px;border-radius:12px;font-size:8px}
-  .instruction{top:57px;left:8px;right:8px;min-height:91px;height:91px;padding:8px 9px;gap:6px;border-radius:16px}
-  .arrow{font-size:44px;width:54px;min-width:54px}
-  .roundabout-svg{width:67px;height:67px}
-  .ins-main .big{font-size:17px;line-height:1.02}
-  .ins-main .sub{font-size:9px;margin-top:4px}
-  .distance{font-size:20px}
-  .routebar{top:154px;left:8px;right:8px;min-height:34px;padding:6px 8px;gap:8px;border-radius:11px}
-  .routebar span{font-size:8px}.routebar b{font-size:10px}
-  .speed-warning{top:194px;max-width:calc(100% - 16px);padding:8px 11px;font-size:12px;text-align:center}
-  .road-alert{top:235px;max-width:calc(100% - 16px);padding:8px 10px;font-size:11px;text-align:center}
-  .junction-state{top:235px;max-width:calc(100% - 16px);min-width:0;padding:7px 10px;font-size:11px}
-  .bottom{left:8px;right:8px;bottom:max(8px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:stretch;gap:6px}
-  .stats{width:100%;max-width:none;display:flex;justify-content:space-between;overflow:hidden;padding:4px;border-radius:13px}
-  .stat{flex:1;min-width:0;padding:4px 5px;text-align:center}
-  .stat b{font-size:12px;white-space:nowrap}.stat.limit b{font-size:13px}.stat small{font-size:7px;white-space:nowrap}
-  .controls{justify-content:flex-end;gap:6px}
-  .round{width:40px;height:40px;border-radius:13px;font-size:18px}
-  .lane-cue{bottom:104px;max-width:calc(100% - 90px);padding:6px 10px;font-size:28px;min-width:125px;border-radius:13px}
-  .lane-cue small{font-size:7px}
-  .panel{left:8px;right:8px;bottom:103px;max-height:calc(100dvh - 210px);padding:11px;border-radius:15px}
-  .menu{right:8px;bottom:103px;width:min(220px,calc(100vw - 16px))}
-  .toast{bottom:104px;max-width:calc(100% - 20px);text-align:center;font-size:12px}
-}
-@media(max-width:360px){
-  .drive-status span:last-child{display:none}
-  .instruction{top:55px;height:87px;min-height:87px}
-  .routebar{top:148px}
-  .speed-warning{top:187px}
-  .road-alert,.junction-state{top:226px}
-  .arrow{font-size:39px;width:48px;min-width:48px}
-  .roundabout-svg{width:61px;height:61px}
-  .ins-main .big{font-size:15px}.distance{font-size:18px}
-  .stat b{font-size:11px}.stat.limit b{font-size:12px}
-}
 </style>
-<meta name="muk-version" content="V44 GOOGLE-STYLE DRIVING CAMERA"><meta name="muk-data" content="OSM road network + UK speed rules + Overpass traffic signals + official UK road-data architecture"><meta name="muk-ui" content="professional cockpit, no-neon, full-bleed map, direction-up/north-up"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data."></head>
+<meta name="muk-version" content="V55-GOOGLE-STYLE-DRIVING-CAMERA-SPEED-AUDIO">
+<meta name="muk-version-original" content="V35 Slick UK Navigation"><meta name="muk-data" content="OSM road network + UK speed rules + Overpass traffic signals + official UK road-data architecture"><meta name="muk-ui" content="professional cockpit, no-neon, full-bleed map, direction-up/north-up"><meta name="muk-speed-data" content="OSM maxspeed + UK national speed limit tags"><meta name="muk-disclaimer" content="Road signs always take priority over app data."></head>
 <body>
 <div id="app">
 <div id="mapViewport"><div id="map"></div></div>
-<div class="topbar"><div class="brand"><span class="brand-mark">▲</span><span>UK satnav</span></div><div class="searchbox"><span class="search-icon">⌕</span><input id="q" placeholder="Enter postcode or destination"><button onclick="find()">SEARCH</button></div></div>
+<div class="topbar"><div class="brand"><span class="brand-mark">▲</span><span>MUK SATNAV <b>86</b></span></div><div class="searchbox"><span class="search-icon">⌕</span><input id="q" placeholder="Enter postcode or destination"><button onclick="find()">SEARCH</button></div></div>
 <div id="driveUI" class="drive-ui" style="display:none">
-  <div class="cockpit-head"><div class="cockpit-brand"><span class="brand-mark">▲</span><span>UK satnav</span></div><div class="destination-chip"><small>DESTINATION</small><b id="driveDestination">Destination</b></div><div class="drive-status"><span class="gps-dot"></span><span>GPS</span></div></div>
+  <div class="cockpit-head"><div class="cockpit-brand"><span class="brand-mark">▲</span><span>MUK SATNAV <b>86</b></span></div><div class="destination-chip"><small>DESTINATION</small><b id="driveDestination">Destination</b></div><div class="drive-status"><span class="gps-dot"></span><span>GPS</span></div></div>
   <div id="instruction" class="instruction"></div>
   <div id="routebar" class="routebar"></div>
   <div id="laneCue" class="lane-cue"></div>
   <div id="junctionState" class="junction-state"></div>
 </div>
 <div id="panel" class="panel"></div>
-<div id="toast" class="toast"></div><div id="speedWarning" class="speed-warning"></div><div id="roadAlert" class="road-alert"></div>
+<div id="toast" class="toast"></div><div id="speedWarning" class="speed-warning"></div><div id="roadAlert" class="road-alert"></div><div id="safetyBadge" class="safety-badge"><span id="safetyText"></span></div>
 <div id="menu" class="menu"></div>
 <div class="bottom"><div id="stats" class="stats" style="display:none"></div><div class="controls"><button id="recenter" class="round" onclick="recenter()" title="Recenter">⌖</button><button id="orientBtn" class="round" onclick="toggleOrientation()" title="Direction up / North up">▲</button><button class="round" onclick="toggleMenu()" title="Menu">☰</button></div></div>
 </div>
@@ -97,31 +47,78 @@
 const map=L.map('map',{zoomControl:true,zoomControlPosition:'bottomright',touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,boxZoom:true,keyboard:true}).setView([54.5,-3.4],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
 let routeLayer=null,myMarker=null,destMarker=null,startPulse=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,routeCum=[],voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0,wakeLock=null,arrivedAnnounced=false,speedChangeState=null,speedChangeFetchedAt=0,speedOverSince=0,speedRingAt=0,trafficLightState={seen:new Set(),lastFetchedAt:0};
+let cameraHeading=null,cameraTarget=null,lastCameraAt=0,lastHeadingAt=0,headingConfidence=0,safetyState={lastWeather:0,lastCameras:0,lastSchool:0,lastCurve:0,lastGradient:0,active:null};
 let lastRouteProgress=0;
 const P=document.getElementById('panel'),UI=document.getElementById('driveUI'),INS=document.getElementById('instruction'),RB=document.getElementById('routebar'),ST=document.getElementById('stats'),TOAST=document.getElementById('toast'),MENU=document.getElementById('menu'),LANE=document.getElementById('laneCue'),JUNC=document.getElementById('junctionState');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const saved=()=>JSON.parse(localStorage.getItem('muk86.saved')||'[]'); const save=a=>localStorage.setItem('muk86.saved',JSON.stringify(a));
 function show(x){P.innerHTML=x;P.classList.add('show')} function hide(){P.classList.remove('show')}
 function toast(x){TOAST.textContent=x;TOAST.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>TOAST.classList.remove('show'),3000)}
-function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice guidance on':'🔇 Voice guidance off'}</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
+function showSafetyInfo(){show(`<b>UK driver safety</b><div class="small">Speed limits, speeding warning, route-based turn guidance, traffic-light alerts, speed-camera data, weather risk, school-area caution and curve warnings are data-dependent. The satnav does not invent unavailable live information.</div><div class="notice"><b>Map camera protection</b><br>Map rotation is isolated from the interface. Unreliable heading data is filtered or replaced by route direction so the map does not spin at low speed.</div>`)}
+function toggleMenu(){MENU.classList.toggle('show');MENU.innerHTML=`<button onclick="newRoute();toggleMenu()">🚗 New route</button><button onclick="showSaved();toggleMenu()">🏷️ Saved places</button><button onclick="toggleVoice();toggleMenu()">${voiceOn?'🔊 Voice guidance on':'🔇 Voice guidance off'}</button><button onclick="showSafetyInfo();toggleMenu()">🛡️ UK safety systems</button><button onclick="stopNavigation();toggleMenu()">⏹ Stop navigation</button>`}
 function formatDistance(m){if(m<1000)return Math.max(5,Math.round(m/5)*5)+' yd';return (m/1609.344).toFixed(m<16093?1:0)+' mi'}
 function armAudio(){try{const AC=window.AudioContext||window.webkitAudioContext;if(AC){audioCtx=audioCtx||new AC();if(audioCtx.state==='suspended')audioCtx.resume();}}catch(e){}}
 function toggleVoice(){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();toast(voiceOn?'Voice guidance on':'Voice guidance off')}
-function smoothHeading(a,b){if(a==null)return b;if(b==null)return a;let d=((b-a+540)%360)-180;return (a+d*.28+360)%360;}
-function lookAheadCenter(p,h){
- if(!p)return null;
- const z=Math.max(1,map.getZoom()||17);
- const size=map.getSize();
- // Google-style driving camera: vehicle stays on the centre line but about 68% down the usable map, leaving most of the screen ahead. The offset is screen-based rather than a fixed number of metres, so it remains consistent across phone sizes and zoom levels.
- const targetY=size.y*0.68;
- const d=(targetY-size.y*0.5)/1.10;
- const a=((h==null?0:h)*Math.PI/180);
- const ux=-d*Math.sin(a), uy=d*Math.cos(a);
- const pp=map.project([p.lat,p.lon],z);
- return map.unproject([pp.x-ux,pp.y-uy],z);
+function angleWrap(a){return ((a%360)+360)%360;}
+function smoothHeading(a,b){if(b==null||!Number.isFinite(b))return a;if(a==null||!Number.isFinite(a))return angleWrap(b);const d=((b-a+540)%360)-180;const gain=Math.abs(d)>45?.18:.30;return angleWrap(a+d*gain);}
+function headingFromMotion(p){if(!lastPos||!p)return null;const d=hav(lastPos,p);if(d<2)return null;return bearing(lastPos,p);}
+function stableNavigationHeading(p,near){
+  const gps=Number.isFinite(p?.heading)?p.heading:null;
+  const motion=headingFromMotion(p);
+  const route=routeGeo?routeBearingAt(near?.index):null;
+  const moving=(p?.speed||0)>=2.2;
+  let candidate=null;
+  if(moving && gps!=null) candidate=gps;
+  else if(moving && motion!=null) candidate=motion;
+  else if(route!=null) candidate=route;
+  if(candidate==null)return cameraHeading;
+  cameraHeading=smoothHeading(cameraHeading,candidate);
+  headingConfidence=moving?Math.min(1,headingConfidence+.12):Math.max(0,headingConfidence-.08);
+  return cameraHeading;
 }
+function cameraCenterFor(p,h){
+  if(!p)return null;
+  // Navigation-camera target: keep the vehicle visually low on the phone and
+  // put substantially more route in front of the driver, like a dedicated nav camera.
+  const speed=p.speed||0;
+  const ahead=Math.max(70,Math.min(125,82+speed*3.2));
+  return lookAheadCenter(p,h??0,ahead);
+}
+function lookAheadCenter(p,h,distOverride){if(!p)return null;if(h==null)return [p.lat,p.lon];const dist=distOverride??45,r=dist/111320,lonr=dist/(111320*Math.cos(p.lat*Math.PI/180)||1);return [p.lat+Math.cos(h*Math.PI/180)*r,p.lon+Math.sin(h*Math.PI/180)*lonr];}
 let orientationMode='heading';
-function setMapRotation(h){if(h==null)return;mapHeading=((h%360)+360)%360;const m=document.getElementById('map');if(m){const rot=orientationMode==='north'?0:-mapHeading;m.style.transform=`rotate(${rot}deg) scale(1.10)`;}const el=myMarker?.getElement?.();const car=el?.querySelector('.car-arrow');if(car)car.style.transform='rotate(0deg)';}
+function setMapRotation(h){
+  if(h!=null&&Number.isFinite(h))mapHeading=angleWrap(h);
+  const mapPane=map?.getPane?.('mapPane');
+  const el=myMarker?.getElement?.();
+  const car=el?.querySelector('.car-arrow');
+  if(mapPane){
+    const rotate=orientationMode==='heading' ? -mapHeading : 0;
+    // Rotate Leaflet's geographic map pane only. UI controls stay upright and
+    // fixed to the phone; the old whole-#map rotation is deliberately avoided.
+    mapPane.style.setProperty('transform-origin','50% 50%','important');
+    mapPane.style.setProperty('transform',`translateZ(0) scale(1.30) rotate(${rotate}deg)`,'important');
+    mapPane.style.setProperty('will-change','transform','important');
+  }
+  if(car){
+    const carRotate=orientationMode==='heading' ? mapHeading : 0;
+    car.style.transform=`rotate(${carRotate}deg)`;
+  }
+}
+function updateDrivingCamera(p,near,force=false){
+  if(!driveMode||!p)return;
+  const now=performance.now();
+  const h=stableNavigationHeading(p,near);
+  if(h==null)return;
+  setMapRotation(h);
+  const target=cameraCenterFor(p,h);
+  if(!target)return;
+  const moved=lastPos?hav(lastPos,p):999;
+  if(!force && now-lastCameraAt<120 && moved<4)return;
+  lastCameraAt=now;
+  cameraTarget=target;
+  const z=Math.max(15.5,Math.min(18,map.getZoom()||17));
+  map.setView(target,z,{animate:false});
+}
 function showRoadAlert(msg){const el=document.getElementById('roadAlert');if(el){el.textContent=msg;el.classList.add('show')}}
 function resetRoadAlert(){const el=document.getElementById('roadAlert');if(el)el.classList.remove('show')}
 function roadSegmentDistance(p,a,b){const meanLat=p.lat*Math.PI/180,cosLat=Math.cos(meanLat)||1,x1=(a.lon-p.lon)*cosLat,y1=a.lat-p.lat,x2=(b.lon-p.lon)*cosLat,y2=b.lat-p.lat,dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,(-x1*dx-y1*dy)/(dx*dx+dy*dy||1))),q={lat:p.lat+y1+t*dy,lon:p.lon+(x1+t*dx)/cosLat};return {d:hav(p,q),q};}
@@ -181,13 +178,13 @@ async function buildRoute(a,dest,startLive=false){
  driveMode=true;document.body.classList.add('drive-active');UI.style.display='block';map.invalidateSize({pan:false});
  resetNavigationState();
  hide();
- const initialNear=nearestOnRoute(a); const initialHeading=routeBearingAt(initialNear.index)??0; map.setView(lookAheadCenter(a,initialHeading),17,{animate:false}); setMapRotation(initialHeading); updateStartPulse(a); updateRouteColour(a); requestWakeLock();
+ const initialNear=nearestOnRoute(a); const initialHeading=routeBearingAt(initialNear.index)??0; cameraHeading=initialHeading; map.setView(cameraCenterFor(a,initialHeading),17,{animate:false}); setMapRotation(initialHeading); updateStartPulse(a); updateRouteColour(a); requestWakeLock();
  initialiseActiveStep(a);
  renderDrive(a);
  if(startLive)startTracking();
  speak('Route planned. '+formatDistance(rt.distance)+' to go.');
 }
-function resetNavigationState(){lastRouteProgress=0;announced={};lastSpokenText='';lastSpokenAt=0;offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;arrivedAnnounced=false;speedChangeState=null;speedChangeFetchedAt=0;speedOverSince=0;speedRingAt=0;trafficLightState={seen:new Set(),lastFetchedAt:0};}
+function resetNavigationState(){lastRouteProgress=0;announced={};lastSpokenText='';lastSpokenAt=0;offRouteSince=0;wrongWaySince=0;speedLimit=null;speedLimitLabel=null;speedLimitFetchedAt=0;roadRuleFetchedAt=0;roadRuleState=null;mapHeading=0;cameraHeading=null;cameraTarget=null;lastCameraAt=0;headingConfidence=0;arrivedAnnounced=false;speedChangeState=null;speedChangeFetchedAt=0;speedOverSince=0;speedRingAt=0;trafficLightState={seen:new Set(),lastFetchedAt:0};}
 function routeProgress(p){
  if(!routeGeo?.coordinates?.length||!routeCum.length)return lastRouteProgress||0;
  const n=nearestOnRoute(p);
@@ -262,6 +259,7 @@ function speedLimitFromTags(t,travelHeading,segA,segB){
  if(hw==='motorway')return {limit:70,label:'70 mph',source:'national-road-class'};
  if(String(tags.dual_carriageway||'').toLowerCase()==='yes')return {limit:70,label:'70 mph',source:'national-dual'};
  if(String(tags.motorroad||'').toLowerCase()==='yes')return {limit:70,label:'70 mph',source:'national-motorroad'};
+ if(['residential','unclassified','living_street'].includes(hw))return {limit:30,label:'30 mph',source:'uk-default-road-class'};
  return {limit:null,label:'—',source:'unknown'};
 }
 function currentRouteHints(){
@@ -285,7 +283,7 @@ function selectSpeedCandidate(elements,p,travelHeading){
  for(const w of (elements||[])){
   const g=w.geometry||[];for(let i=1;i<g.length;i++){
    const a={lat:g[i-1].lat,lon:g[i-1].lon},b={lat:g[i].lat,lon:g[i].lon};
-   const z=roadSegmentDistance(p,a,b);if(z.d>120)continue;
+   const z=roadSegmentDistance(p,a,b);if(z.d>180)continue;
    const rb=bearing(a,b), reverse=String(w.tags?.oneway||'').toLowerCase()==='-1', roadBearing=reverse?(rb+180)%360:rb;
    const hp=travelHeading==null?0:angleDiff(travelHeading,roadBearing);
    let routePenalty=0;
@@ -305,15 +303,17 @@ async function overpassJson(query){
  return null;
 }
 async function speedLimitCheck(p){
- if(Date.now()-speedLimitFetchedAt<2200)return;
+ if(Date.now()-speedLimitFetchedAt<1800)return;
  speedLimitFetchedAt=Date.now();
  try{
-  const ahead=routePointAhead(p,85)||p;
-  const ahead2=routePointAhead(p,210)||p;
-  const q=`[out:json][timeout:8];(way(around:120,${p.lat},${p.lon})[highway];way(around:130,${ahead.lat},${ahead.lon})[highway];way(around:130,${ahead2.lat},${ahead2.lon})[highway];);out tags geom;`;
+  const near=nearestOnRoute(p);
+  const ahead=routePointAhead(p,70)||p;
+  const ahead2=routePointAhead(p,170)||p;
+  const ahead3=routePointAhead(p,300)||p;
+  const q=`[out:json][timeout:10];(way(around:320,${p.lat},${p.lon})[highway];way(around:260,${ahead.lat},${ahead.lon})[highway];way(around:260,${ahead2.lat},${ahead2.lon})[highway];way(around:220,${ahead3.lat},${ahead3.lon})[highway];);out tags geom;`;
   const j=await overpassJson(q);if(!j)throw Error('speed data unavailable');
   const best=selectSpeedCandidate(j.elements||[],p,p.heading);
-  if(!best){return;}
+  if(!best){speedLimitLabel=speedLimitLabel||'—';return;}
   const data=speedLimitFromTags(best.tags,p.heading,best.a,best.b);
   if(data.limit){speedLimit=data.limit;speedLimitLabel=data.label;}
   else if(speedLimit==null){speedLimitLabel='—';}
@@ -332,18 +332,25 @@ function speedChangeRing(){
 
 function updateSpeedWarning(speed){
  const el=document.getElementById('speedWarning');
- if(!speedLimit||speed<1){el.classList.remove('show');speedOverSince=0;return}
- const over=speed>speedLimit+1;
+ if(!speedLimit||speed<3){el.classList.remove('show');speedOverSince=0;return}
+ const over=speed>=speedLimit+2;
  if(over){
    if(!speedOverSince)speedOverSince=Date.now();
    const activeFor=Date.now()-speedOverSince;
-   if(activeFor>=900){
+   if(activeFor>=650){
      el.textContent=`MATE, YOU'RE OVER THE SPEED LIMIT — ${mph(speed)} mph / ${speedLimit} mph. SLOW DOWN`;
      el.classList.add('show');
-     if(Date.now()-speedRingAt>=4000){
+     // Visual and audible warnings are independent so a failed speech voice
+     // cannot suppress the warning tone. Repeat at a restrained interval.
+     if(Date.now()-speedRingAt>=3500){
        speedRingAt=Date.now();
        speedChangeRing();
-       speak("Mate, you're over the speed limit. Slow down.",true);
+       if('speechSynthesis' in window){
+         try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance("Mate, you're over the speed limit. Slow down.");u.lang='en-GB';u.rate=.94;u.volume=1;
+           const voices=speechSynthesis.getVoices?.()||[];const gb=voices.find(v=>/^en-GB$/i.test(v.lang));if(gb)u.voice=gb;
+           speechSynthesis.speak(u);
+         }catch(e){}
+       }
      }
    }
  }else{
@@ -402,46 +409,34 @@ async function checkTrafficLights(p){
  }catch(e){}
 }
 
-function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);requestWakeLock();watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:0,timeout:6000});toast('Live navigation started')}
-function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();document.getElementById('map').style.transform='rotate(0deg) scale(1)';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
-function toggleOrientation(){orientationMode=orientationMode==='heading'?'north':'heading';const b=document.getElementById('orientBtn');if(b)b.textContent=orientationMode==='heading'?'▲':'N';if(lastPos){const h=lastPos.heading??routeBearingAt(nearestOnRoute(lastPos).index)??0;setMapRotation(h);const c=lookAheadCenter(lastPos,h);map.setView(c,17,{animate:false});}toast(orientationMode==='heading'?'Direction-up navigation':'North-up map')}
-function recenter(){if(lastPos){const c=lookAheadCenter(lastPos,lastPos.heading);map.setView(c,17,{animate:false});setMapRotation(lastPos.heading)}}
-function onPositionError(e){if(e.code===1)toast('Allow Location for UK satnav');else toast('GPS signal unavailable')}
-let markerAnim=null,lastGpsAt=0,lastGpsPoint=null;
-function animateMarkerTo(target,heading){
- const el=myMarker?.getElement?.();
- const from=lastGpsPoint||myMarker?.getLatLng?.()||target;
- const t0=performance.now(),dur=260;
- if(markerAnim)cancelAnimationFrame(markerAnim);
- function frame(now){
-  const f=Math.min(1,(now-t0)/dur),e=f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
-  const q={lat:from.lat+(target.lat-from.lat)*e,lng:from.lon+(target.lon-from.lon)*e};
-  if(myMarker)myMarker.setLatLng(q);
-  if(el){const car=el.querySelector('.car-arrow');if(car)car.style.transform='rotate(0deg)';}
-  if(driveMode&&lastPos){const h=heading??lastPos.heading;const c=lookAheadCenter({lat:q.lat,lon:q.lng},h);if(c)map.setView(c,Math.max(16,map.getZoom()),{animate:false});}
-  if(f<1)markerAnim=requestAnimationFrame(frame);
- }
- markerAnim=requestAnimationFrame(frame);
- lastGpsPoint={lat:target.lat,lon:target.lon};
+function setSafetyBadge(text,type=''){const box=document.getElementById('safetyBadge'),el=document.getElementById('safetyText');if(!box||!el)return;if(!text){box.classList.remove('show');box.className='safety-badge';safetyState.active=null;return}box.className='safety-badge '+type;el.textContent=text;box.classList.add('show');safetyState.active=text;clearTimeout(box._t);box._t=setTimeout(()=>{if(safetyState.active===text){box.classList.remove('show');safetyState.active=null}},7000)}
+async function fetchJson(url,timeout=7000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{signal:c.signal,headers:{'Accept':'application/json'}});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}}
+async function checkGradientRisk(p){if(!driveMode||!routeGeo)return;try{const a=routePointAhead(p,160)||p;const b=routePointAhead(p,360)||a;const q=`[out:json][timeout:6];way(around:120,${a.lat},${a.lon})[highway][incline];way(around:120,${b.lat},${b.lon})[highway][incline];out tags geom;`;const j=await fetchJson('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),6500);for(const w of j.elements||[]){const v=String(w.tags?.incline||'').replace('%','');const n=parseFloat(v);if(Number.isFinite(n)&&Math.abs(n)>=6){if(n>=6)setSafetyBadge('STEEP GRADIENT AHEAD — USE APPROPRIATE GEAR','weather-alert');else if(n<=-6)setSafetyBadge('STEEP DESCENT AHEAD — USE APPROPRIATE GEAR','weather-alert');break}}}catch(e){}}
+async function checkSafetyData(p){if(!driveMode||!p)return;const now=Date.now();
+ if(now-safetyState.lastWeather>300000){safetyState.lastWeather=now;try{const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,apparent_temperature,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m&timezone=auto`;const j=await fetchJson(u,6500);const c=j.current||{};const temp=Number(c.temperature_2m),rain=Number(c.rain||0)+Number(c.showers||0),snow=Number(c.snowfall||0),wind=Number(c.wind_speed_10m||0),code=Number(c.weather_code||0);if(snow>0||[71,73,75,77,85,86].includes(code)){setSafetyBadge('ICE / SNOW RISK — conditions may be hazardous','weather-alert');}else if(rain>=4||[65,67,82].includes(code)){setSafetyBadge('HEAVY RAIN — AQUAPLANING RISK','weather-alert');}else if(temp<=2&&rain>0){setSafetyBadge('LOW TEMPERATURE + RAIN — ICE RISK','weather-alert');}else if(wind>=45||[95,96,99].includes(code)){setSafetyBadge('STRONG WIND / STORM CONDITIONS','weather-alert');}}catch(e){}}
+ if(now-safetyState.lastCameras>30000&&routeGeo){safetyState.lastCameras=now;try{const a=routePointAhead(p,220)||p;const q=`[out:json][timeout:7];(node(around:260,${a.lat},${a.lon})[highway=speed_camera];node(around:260,${a.lat},${a.lon})[enforcement=average_speed];node(around:260,${a.lat},${a.lon})[highway=average_speed_camera];);out tags;`;const j=await fetchJson('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),7000);let best=null;for(const n of j.elements||[]){const d=hav(p,{lat:n.lat,lon:n.lon});if(d<25||d>260)continue;if(!best||d<best.d)best={d,n}}if(best){const avg=String(best.n.tags?.enforcement||'').toLowerCase()==='average_speed'||String(best.n.tags?.highway||'').toLowerCase()==='average_speed_camera';setSafetyBadge(`${avg?'AVERAGE-SPEED CHECK':'SPEED CAMERA'} AHEAD — ${formatDistance(best.d)}`,'camera-alert');if(best.d<180)speak(`${avg?'Average speed check':'Speed camera'} ahead in ${formatDistance(best.d)}.`,false)}}catch(e){}}
+ if(now-safetyState.lastGradient>45000){safetyState.lastGradient=now;await checkGradientRisk(p)}
+ if(now-safetyState.lastSchool>60000){safetyState.lastSchool=now;try{const q=`[out:json][timeout:6];node(around:220,${p.lat},${p.lon})[amenity=school];out tags;`;const j=await fetchJson('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),6500);let nearSchool=false;for(const n of j.elements||[]){const d=hav(p,{lat:n.lat,lon:n.lon});if(d>=25&&d<=180){nearSchool=true;break}}if(nearSchool){const h=new Date().getHours(),weekday=new Date().getDay();if(weekday>=1&&weekday<=5&&(h>=7&&h<=9||h>=14&&h<=17))setSafetyBadge('SCHOOL AREA — EXTRA CAUTION','weather-alert')} }catch(e){}}
 }
+function routeGeometryHazards(p){if(!routeGeo?.coordinates?.length)return;const n=nearestOnRoute(p),i=n.index,cs=routeGeo.coordinates;let sharp=false;for(let k=Math.max(1,i);k<Math.min(cs.length-2,i+35);k++){const a={lat:cs[k-1][1],lon:cs[k-1][0]},b={lat:cs[k][1],lon:cs[k][0]},c={lat:cs[k+1][1],lon:cs[k+1][0]};const ab=bearing(a,b),bc=bearing(b,c);if(angleDiff(ab,bc)>48&&hav(p,b)<320){sharp=true;break}}if(sharp){setSafetyBadge('SHARP CURVE AHEAD — REDUCE SPEED','weather-alert');}}
+
+function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);requestWakeLock();watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:1000,timeout:10000});toast('Live navigation started')}
+function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();const vp=document.getElementById('mapViewport');const me=document.getElementById('map');const mp=map?.getPane?.('mapPane');if(vp)vp.style.transform='none';if(me)me.style.transform='none';if(mp)mp.style.transform='none';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
+function toggleOrientation(){orientationMode=orientationMode==='heading'?'north':'heading';const b=document.getElementById('orientBtn');if(b)b.textContent=orientationMode==='heading'?'▲':'N';if(lastPos){const near=nearestOnRoute(lastPos);const h=orientationMode==='heading'?(stableNavigationHeading(lastPos,near)??routeBearingAt(near.index)):0;setMapRotation(h??0);map.setView(cameraCenterFor(lastPos,h??0),17,{animate:false});}toast(orientationMode==='heading'?'Driving camera enabled':'North-up map enabled')}
+function recenter(){if(lastPos){const near=nearestOnRoute(lastPos);const h=orientationMode==='heading'?(stableNavigationHeading(lastPos,near)??routeBearingAt(near.index)):0;updateDrivingCamera(lastPos,near,true);if(orientationMode==='north')map.setView([lastPos.lat,lastPos.lon],17,{animate:false});}}
+function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
 async function onPosition(pos){
- const now=Date.now();
  const p={lat:pos.coords.latitude,lon:pos.coords.longitude};p.accuracy=pos.coords.accuracy||999;p.speed=Number.isFinite(pos.coords.speed)?Math.max(0,pos.coords.speed):0;
- const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:(lastPos?bearing(lastPos,p):null);p.heading=smoothHeading(lastPos?.heading,rawHeading);
- lastPos=p;
- const near=nearestOnRoute(p);
- const snapped=(near.point&&near.d<65)?near.point:p;
- if(!myMarker)myMarker=L.marker([snapped.lat,snapped.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);
- const navHeading=p.heading!=null?p.heading:(routeGeo?routeBearingAt(near.index):null);
- if(navHeading!=null)setMapRotation(navHeading);
- animateMarkerTo(snapped,navHeading);
- const c=lookAheadCenter(snapped,navHeading);
- if(c)map.setView(c,Math.max(16,map.getZoom()),{animate:false});
- map.invalidateSize({pan:false});
+ const rawHeading=Number.isFinite(pos.coords.heading)&&pos.coords.heading>=0?pos.coords.heading:headingFromMotion(p);
+ p.heading=rawHeading;
+ const near=nearestOnRoute(p); const snapped=(near.point&&near.d<85)?near.point:{lat:p.lat,lon:p.lon};
+ if(!myMarker)myMarker=L.marker([snapped.lat,snapped.lon],{icon:carIcon(),zIndexOffset:1000}).addTo(map);else myMarker.setLatLng([snapped.lat,snapped.lon]);
+ const prev=lastPos; lastPos=p;
+ if(prev&&hav(prev,p)<1.2 && p.speed<1.5) p.speed=0;
+ updateDrivingCamera(snapped,near);
  updateStartPulse(p);updateRouteColour(p);requestWakeLock();
- await speedLimitCheck(p);await checkUpcomingSpeedChange(p);await checkTrafficLights(p);updateStats(p);
- if(!routeSteps.length)return;
- await navigationEngine(p);
+ await Promise.allSettled([speedLimitCheck(p),checkUpcomingSpeedChange(p),checkTrafficLights(p),checkSafetyData(p)]);routeGeometryHazards(p);updateStats(p);
+ if(!routeSteps.length)return;await navigationEngine(p);
 }
 
 function isRoundaboutStep(st){const t=st?.maneuver?.type||'';return t==='roundabout'||t==='rotary'||t==='exit roundabout';}
@@ -498,7 +493,7 @@ function navigationEngine(p){
  const near=nearestOnRoute(p);
  if(near.d>65){
    if(!offRouteSince)offRouteSince=Date.now();
-   if(Date.now()-offRouteSince>900&&Date.now()-lastReroute>5000){
+   if(Date.now()-offRouteSince>2200&&Date.now()-lastReroute>9000){
      toast('Off route — recalculating'); speak('You are off route. Recalculating.'); lastReroute=Date.now();
      return buildRoute(p,current,true).then(()=>{offRouteSince=0}).catch(()=>toast('Unable to recalculate right now'));
    }
@@ -506,7 +501,7 @@ function navigationEngine(p){
  const rb=routeBearingAt(near.index);
  if(p.heading!=null&&near.d<50&&rb!=null&&angleDiff(p.heading,rb)>115&&p.speed>2){
    if(!wrongWaySince)wrongWaySince=Date.now();
-   if(Date.now()-wrongWaySince>700&&Date.now()-lastReroute>5000){
+   if(Date.now()-wrongWaySince>1800&&Date.now()-lastReroute>9000){
      toast('Wrong direction — recalculating'); speak('Wrong direction. Recalculating.'); lastReroute=Date.now();
      return buildRoute(p,current,true).then(()=>{wrongWaySince=0}).catch(()=>{});
    }
@@ -517,7 +512,7 @@ function navigationEngine(p){
  // Advance when the manoeuvre is reached OR when GPS has already carried the
  // vehicle beyond its route geometry. This prevents a missed junction from
  // leaving the navigator stuck on the previous instruction after a GPS jump.
- if(actionableStep(st)&&(distTo<70||hasPassedManeuver(p,st))&&stepIndex<routeSteps.length-1){
+ if(actionableStep(st)&&(distTo<45||hasPassedManeuver(p,st))&&stepIndex<routeSteps.length-1){
    const oldIndex=stepIndex; let guard=0;
    do{
     stepIndex++;guard++;
@@ -534,8 +529,8 @@ function navigationEngine(p){
  const realJunction=isRoundaboutStep(st)||['turn','fork','merge','on ramp','off ramp'].includes(type)||!!commercialInstruction(st,stepIndex);
  if(realJunction){
    const mphNow=mph(p.speed);
-   const prep=isRoundaboutStep(st)?Math.max(180,Math.min(360,mphNow*8.8)):Math.max(170,Math.min(380,mphNow*8.0));
-   const immediate=isRoundaboutStep(st)?Math.max(28,Math.min(52,mphNow*1.25)):Math.max(25,Math.min(55,mphNow*1.15));
+   const prep=isRoundaboutStep(st)?Math.max(100,Math.min(190,mphNow*4.8)):Math.max(85,Math.min(180,mphNow*4.0));
+   const immediate=isRoundaboutStep(st)?Math.max(20,Math.min(34,mphNow*.85)):Math.max(18,Math.min(32,mphNow*.72));
    if(distTo<prep&&!announced[key+'a']){announced[key+'a']=1;speak(preparationForStep(st,distTo));}
    if(distTo<immediate&&!announced[key+'b']){announced[key+'b']=1;speak(immediateForStep(st));}
  }
@@ -562,7 +557,7 @@ function immediateForStep(st){
 
 
 function carIcon(){
- const html='<div class="car-arrow" style="width:34px;height:46px;display:flex;align-items:center;justify-content:center;font-size:34px;line-height:1;color:#8dff55;text-shadow:0 0 5px rgba(141,255,85,.45),0 0 10px rgba(141,255,85,.20);filter:drop-shadow(0 0 3px rgba(141,255,85,.30));transform-origin:center">▲</div>';
+ const html='<div class="car-arrow" style="width:34px;height:46px;display:flex;align-items:center;justify-content:center;font-size:34px;line-height:1;color:#1683ff;text-shadow:0 2px 3px rgba(0,0,0,.55);transform-origin:center">▲</div>';
  return L.divIcon({className:'muk-car',html,iconSize:[38,52],iconAnchor:[19,26]});
 }
 function actionableStep(st){
