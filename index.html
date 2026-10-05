@@ -8,7 +8,7 @@
 <style>
 :root{--nav:#172019;--nav2:#2f4935;--lime:#c9f36a;--cyan:#48e5ff;--cream:#f7f8f3;--ink:#101711;--muted:#9da99c;--white:#fff;--danger:#ff4d55;--glass:rgba(10,16,12,.84);--shadow:0 12px 34px rgba(0,0,0,.34)}
 *{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#080b09;color:var(--ink);overflow:hidden}button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;font-weight:850;background:var(--nav);color:#fff}button.secondary{background:#e9eee6;color:var(--nav)}button.danger{background:#f1dfdb;color:#8d352b}
-#mapViewport{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;contain:paint;transform:none!important;will-change:auto}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;transform:none!important;transform-origin:center center;will-change:auto}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
+#mapViewport{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;contain:paint;transform:none!important;transform-origin:50% 50%;will-change:transform}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;background:#dfe7dc;transform:none!important;transform-origin:center center;will-change:auto}.leaflet-container{background:#dfe7dc}.leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,.75)!important}
 
 /* PRE-DRIVE LAUNCHER */
 .topbar{position:absolute;z-index:1200;top:14px;left:14px;right:14px;display:flex;gap:10px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{background:rgba(15,23,17,.94);color:#fff;border:1px solid rgba(201,243,106,.28);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);font-weight:950;letter-spacing:.5px;display:flex;align-items:center;gap:8px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--lime);color:#172019;font-size:15px}.searchbox{flex:1;display:flex;align-items:center;gap:6px;background:rgba(250,252,247,.97);padding:6px 7px;border-radius:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.65)}.searchbox input{flex:1;border:0;outline:0;padding:9px 7px;min-width:0;background:transparent;font-weight:650}.searchbox button{background:var(--nav2);padding:9px 15px}.search-icon{font-size:25px;color:#536152;padding-left:6px}
@@ -88,20 +88,21 @@ function lookAheadCenter(p,h,distOverride){if(!p)return null;if(h==null)return [
 let orientationMode='heading';
 function setMapRotation(h){
   if(h!=null&&Number.isFinite(h))mapHeading=angleWrap(h);
-  const mapPane=map?.getPane?.('mapPane');
+  const vp=document.getElementById('mapViewport');
   const el=myMarker?.getElement?.();
   const car=el?.querySelector('.car-arrow');
-  if(mapPane){
+  if(vp){
+    // Rotate only the dedicated map viewport. Never transform Leaflet's mapPane:
+    // Leaflet owns that pane's transform and changing it causes map jumps.
     const rotate=orientationMode==='heading' ? -mapHeading : 0;
-    // Rotate Leaflet's geographic map pane only. UI controls stay upright and
-    // fixed to the phone; the old whole-#map rotation is deliberately avoided.
-    mapPane.style.setProperty('transform-origin','50% 50%','important');
-    mapPane.style.setProperty('transform',`translateZ(0) scale(1.30) rotate(${rotate}deg)`,'important');
-    mapPane.style.setProperty('will-change','transform','important');
+    vp.style.setProperty('transform-origin','50% 50%','important');
+    vp.style.setProperty('transform',`translateZ(0) scale(1.28) rotate(${rotate}deg)`,'important');
+    vp.style.setProperty('will-change','transform','important');
   }
   if(car){
-    const carRotate=orientationMode==='heading' ? mapHeading : 0;
-    car.style.transform=`rotate(${carRotate}deg)`;
+    // Map rotates with the driving direction, so keep the vehicle graphic aligned
+    // with the geographic road rather than counter-rotating it.
+    car.style.transform='rotate(0deg)';
   }
 }
 function updateDrivingCamera(p,near,force=false){
@@ -113,7 +114,7 @@ function updateDrivingCamera(p,near,force=false){
   const target=cameraCenterFor(p,h);
   if(!target)return;
   const moved=lastPos?hav(lastPos,p):999;
-  if(!force && now-lastCameraAt<120 && moved<4)return;
+  if(!force && now-lastCameraAt<180)return;
   lastCameraAt=now;
   cameraTarget=target;
   const z=Math.max(15.5,Math.min(18,map.getZoom()||17));
@@ -375,6 +376,7 @@ async function checkUpcomingSpeedChange(p){
   for(const sample of samples){const best=selectSpeedCandidate(j.elements||[],sample,routeBearingAt(sample.index));if(!best)continue;const data=speedLimitFromTags(best.tags,routeBearingAt(sample.index),best.a,best.b);if(data.limit&&(!found.length||found[found.length-1].limit!==data.limit))found.push({limit:data.limit,distance:sample?hav(p,sample):0});}
   const current=speedLimit;if(!current||!found.length)return;const next=found.find(x=>x.limit!==current);if(!next)return;
   const key=`speed-change-${next.limit}-${Math.round(next.distance/10)}`;if(speedChangeState?.key===key)return;speedChangeState={key,limit:next.limit};
+  if((p.speed||0)<2.2)return;
   const text=next.limit<current?"Mate, road speed changes ahead. You're approaching a new speed limit. If you're driving too fast, slow down.":"Mate, road speed changes ahead. You're approaching a higher speed limit. Drive safely.";
   speak(text,true);
  }catch(e){}
@@ -401,7 +403,7 @@ async function checkTrafficLights(p){
    const key=String(best.n.id||`${best.n.lat.toFixed(5)},${best.n.lon.toFixed(5)}`);
    if(trafficLightState.seen.has(key))return;
    trafficLightState.seen.add(key);
-   speak(`Traffic lights approaching in ${formatDistance(best.d)}.`);
+   if((p.speed||0)>=2.2)speak(`Traffic lights approaching in ${formatDistance(best.d)}.`);
    const alert=document.getElementById('roadAlert');
    alert.textContent=`Traffic lights approaching — ${formatDistance(best.d)}`;
    alert.classList.add('show');
@@ -421,7 +423,7 @@ async function checkSafetyData(p){if(!driveMode||!p)return;const now=Date.now();
 function routeGeometryHazards(p){if(!routeGeo?.coordinates?.length)return;const n=nearestOnRoute(p),i=n.index,cs=routeGeo.coordinates;let sharp=false;for(let k=Math.max(1,i);k<Math.min(cs.length-2,i+35);k++){const a={lat:cs[k-1][1],lon:cs[k-1][0]},b={lat:cs[k][1],lon:cs[k][0]},c={lat:cs[k+1][1],lon:cs[k+1][0]};const ab=bearing(a,b),bc=bearing(b,c);if(angleDiff(ab,bc)>48&&hav(p,b)<320){sharp=true;break}}if(sharp){setSafetyBadge('SHARP CURVE AHEAD — REDUCE SPEED','weather-alert');}}
 
 function startTracking(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);requestWakeLock();watchId=navigator.geolocation.watchPosition(onPosition,onPositionError,{enableHighAccuracy:true,maximumAge:1000,timeout:10000});toast('Live navigation started')}
-function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();const vp=document.getElementById('mapViewport');const me=document.getElementById('map');const mp=map?.getPane?.('mapPane');if(vp)vp.style.transform='none';if(me)me.style.transform='none';if(mp)mp.style.transform='none';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
+function stopNavigation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}driveMode=false;hide();document.body.classList.remove('drive-active');UI.style.display='none';ST.style.display='none';INS.classList.remove('show');RB.classList.remove('show');LANE.classList.remove('show');document.getElementById('speedWarning').classList.remove('show');resetRoadAlert();const vp=document.getElementById('mapViewport');const me=document.getElementById('map');if(vp)vp.style.transform='none';if(me)me.style.transform='none';if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}if('speechSynthesis'in window)speechSynthesis.cancel();toast('Navigation stopped')}
 function toggleOrientation(){orientationMode=orientationMode==='heading'?'north':'heading';const b=document.getElementById('orientBtn');if(b)b.textContent=orientationMode==='heading'?'▲':'N';if(lastPos){const near=nearestOnRoute(lastPos);const h=orientationMode==='heading'?(stableNavigationHeading(lastPos,near)??routeBearingAt(near.index)):0;setMapRotation(h??0);map.setView(cameraCenterFor(lastPos,h??0),17,{animate:false});}toast(orientationMode==='heading'?'Driving camera enabled':'North-up map enabled')}
 function recenter(){if(lastPos){const near=nearestOnRoute(lastPos);const h=orientationMode==='heading'?(stableNavigationHeading(lastPos,near)??routeBearingAt(near.index)):0;updateDrivingCamera(lastPos,near,true);if(orientationMode==='north')map.setView([lastPos.lat,lastPos.lon],17,{animate:false});}}
 function onPositionError(e){if(e.code===1)toast('Allow Location for MUK SATNAV 86');else toast('GPS signal unavailable')}
@@ -527,7 +529,7 @@ function navigationEngine(p){
  // One preparation call and one final call per actual turn/junction.
  // No repeated indicator/turn announcements while continuing on a road.
  const realJunction=isRoundaboutStep(st)||['turn','fork','merge','on ramp','off ramp'].includes(type)||!!commercialInstruction(st,stepIndex);
- if(realJunction){
+ if(realJunction && (p.speed||0)>=2.2){
    const mphNow=mph(p.speed);
    const prep=isRoundaboutStep(st)?Math.max(100,Math.min(190,mphNow*4.8)):Math.max(85,Math.min(180,mphNow*4.0));
    const immediate=isRoundaboutStep(st)?Math.max(20,Math.min(34,mphNow*.85)):Math.max(18,Math.min(32,mphNow*.72));
