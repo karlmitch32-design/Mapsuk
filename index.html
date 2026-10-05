@@ -49,26 +49,24 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-function hav(a,b){
+/* V59 hardening: expose core navigation geometry helpers on window so every handler/callback can resolve them. */
+window.hav=function(a,b){
   if(!a||!b||!Number.isFinite(+a.lat)||!Number.isFinite(+a.lon)||!Number.isFinite(+b.lat)||!Number.isFinite(+b.lon)) return Infinity;
-  const R=6371000, r=Math.PI/180;
-  const dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
-  const la1=a.lat*r, la2=b.lat*r;
+  const R=6371000,r=Math.PI/180,dLat=(b.lat-a.lat)*r,dLon=(b.lon-a.lon)*r,la1=a.lat*r,la2=b.lat*r;
   const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
-}
-function bearing(a,b){
+};
+window.bearing=function(a,b){
   if(!a||!b) return null;
-  const r=Math.PI/180, la1=a.lat*r, la2=b.lat*r, dl=(b.lon-a.lon)*r;
-  const y=Math.sin(dl)*Math.cos(la2);
+  const r=Math.PI/180,la1=a.lat*r,la2=b.lat*r,dl=(b.lon-a.lon)*r,y=Math.sin(dl)*Math.cos(la2);
   const x=Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dl);
   return (Math.atan2(y,x)/r+360)%360;
-}
-function angleDiff(a,b){
+};
+window.angleDiff=function(a,b){
   if(a==null||b==null||!Number.isFinite(+a)||!Number.isFinite(+b)) return 180;
   return Math.abs((((+a-+b)+540)%360)-180);
-}
-
+};
+const hav=window.hav,bearing=window.bearing,angleDiff=window.angleDiff;
 const map=L.map('map',{zoomControl:true,zoomControlPosition:'bottomright',touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,boxZoom:true,keyboard:true}).setView([54.5,-3.4],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
 let routeLayer=null,myMarker=null,destMarker=null,startPulse=null,current=null,watchId=null,routeSteps=[],stepIndex=0,routeGeo=null,routeMeta=null,routeCum=[],voiceOn=true,driveMode=false,lastPos=null,lastReroute=0,offRouteSince=0,wrongWaySince=0,announced={},heading=null,speedLimit=null,speedLimitLabel=null,speedLimitFetchedAt=0,roadRuleFetchedAt=0,roadRuleState=null,lastCameraMove=0,mapHeading=0,wakeLock=null,arrivedAnnounced=false,speedChangeState=null,speedChangeFetchedAt=0,speedOverSince=0,speedRingAt=0,trafficLightState={seen:new Set(),lastFetchedAt:0};
